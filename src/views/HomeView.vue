@@ -33,7 +33,7 @@ const airports = ref<string[]>([])
       <CardContent>
         <Field>
           <FieldLabel for="airports">Airports</FieldLabel>
-          <TagsInput v-model="airports">
+          <TagsInput v-model="airports" add-on-tab :delimiter="/[, ]/">
             <TagsInputItem v-for="airport in airports" :key="airport" :value="airport">
               <TagsInputItemText :text="airport" />
               <TagsInputItemDelete />
