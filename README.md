@@ -34,7 +34,10 @@ python3 -m pip install -r backend/requirements.txt
 ### 2) Start Flask backend
 
 ```bash
-python3 backend/app.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r backend/requirements.txt
+python backend/app.py
 ```
 
 Backend will run at:
