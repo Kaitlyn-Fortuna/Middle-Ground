@@ -1,42 +1,39 @@
-# MiddleGround: Frontend + Flask Backend (Localhost Setup)
+# MiddleGround
 
-This project is set up for a split local architecture:
-
-- Frontend (HTML/CSS/JS) runs on one port (example: `http://localhost:5500`)
-- Flask backend API runs on another port (`http://127.0.0.1:5001`)
+- Frontend (HTML/CSS/JS) runs on one port (`http://localhost:5500`)
+- Flask backend API runs on another port (`http://localhost:5001`)
 
 The frontend makes HTTP requests to Flask and receives JSON responses.
 
 ## Ports
 
-In local development, frontend and backend are usually separate processes, so they run on different ports.
-
-Example:
 - Frontend: `5500`
 - Backend: `5001`
 
 Because origins differ by port, CORS must allow frontend origin(s).  
 `backend/app.py` uses `flask-cors` to allow:
 
-- `http://localhost:5500`
-- `http://127.0.0.1:5500`
+- `http://localhost:****`
+- `http://127.0.0.1:****`
 
 ## Setup
 
-### 1) Install Python dependencies
-
-From project root:
-
-```bash
-python3 -m pip install -r backend/requirements.txt
-```
-
-### 2) Start Flask backend
+### 1) Start Python Virtual Environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+### 2) Install Python Dependecies
+
+```bash
 python -m pip install -r backend/requirements.txt
+```
+
+### 3) Start backend 'server'
+
+```bash
 python backend/app.py
 ```
 
@@ -44,11 +41,13 @@ Backend will run at:
 
 `http://127.0.0.1:5001`
 
-### 3) Start frontend
+
+### 4) Start frontend
 
 Serve `main.html` with any local static server (for example VS Code Live Server) on port `5500`:
 
 `http://127.0.0.1:5500/main.html` or `http://localhost:5500/main.html`
+
 
 ## API Endpoints
 
