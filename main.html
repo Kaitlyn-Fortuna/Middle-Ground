@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiddleGround Frontend + Flask API</title>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Flask API Localhost Demo</h1>
+      <p>Frontend (this page) calls backend at <code>http://127.0.0.1:5001</code>.</p>
+
+      <section class="controls">
+        <button id="healthBtn">Check Health</button>
+
+        <label for="valueInput">Compute input:</label>
+        <input id="valueInput" type="number" value="10" min="1" />
+        <button id="computeBtn">Run Compute</button>
+      </section>
+
+      <section>
+        <h2>Response</h2>
+        <pre id="output">Click a button to call the Flask API...</pre>
+      </section>
+    </main>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
