@@ -7,18 +7,7 @@ This project is set up for a split local architecture:
 
 The frontend makes HTTP requests to Flask and receives JSON responses.
 
-## What We Added
-
-- `backend/app.py`  
-  Flask server with:
-  - `GET /api/health` (connectivity check)
-  - `GET /api/compute?value=<n>` (Python computation demo)
-- `backend/requirements.txt`  
-  Python dependencies for Flask and CORS.
-- `main.html`, `main.css`, `main.js`  
-  Minimal frontend UI that calls backend endpoints and renders responses.
-
-## Why Two Ports?
+## Ports
 
 In local development, frontend and backend are usually separate processes, so they run on different ports.
 
@@ -94,22 +83,3 @@ Example response:
   "result": 55
 }
 ```
-
-Error example (`value=0`):
-
-```json
-{
-  "error": "value must be >= 1"
-}
-```
-
-## How It Works (Request Flow)
-
-1. User clicks a button in the frontend.
-2. `main.js` calls Flask using `fetch(...)`.
-3. Flask runs Python logic and returns JSON.
-4. Frontend prints the JSON response to the page.
-
-## Next Step for Heavy Computation
-
-Replace the demo logic in `/api/compute` with your real Python compute code (NumPy/Pandas/ML/etc.), keeping the same request/response pattern.
