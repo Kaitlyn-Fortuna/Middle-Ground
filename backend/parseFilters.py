@@ -58,7 +58,7 @@ def _normalize_string_list(value: Any) -> Optional[List[str]]:
             cleaned = " ".join(item.strip().lower().split())
             if cleaned:
                 normalized.append(cleaned)
-    return normalized
+    return normalized if normalized else None
 
 
 def _parse_optional_int(value: Any) -> Optional[int]:
