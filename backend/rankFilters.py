@@ -34,11 +34,11 @@ class RankResult:
 
 DB_PATH = Path("data/airport_data.db")
 
-HOT_WEATHER_TEMP_THRESHOLD = [100.0,85.0]  # Fahrenheit
-WARM_WETHER_TEMP_THRESHOLD = [85.0, 70.0]  # Fahrenheit
-MILD_WEATHER_TEMP_THRESHOLD = [70.0, 55.0]  # Fahrenheit
-COOL_WEATHER_TEMP_THRESHOLD = [55.0, 40.0]  # Fahrenheit
-COLD_WEATHER_TEMP_THRESHOLD = [40.0, 0.0]  # Fahrenheit
+HOT_WEATHER_TEMP_THRESHOLD = [40.0, 30.0]  # Celsius
+WARM_WETHER_TEMP_THRESHOLD = [30.0, 22.0]  # Celsius
+MILD_WEATHER_TEMP_THRESHOLD = [22.0, 14.0]  # Celsius
+COOL_WEATHER_TEMP_THRESHOLD = [14.0, 4.0]  # Celsius
+COLD_WEATHER_TEMP_THRESHOLD = [4.0, -20.0]  # Celsius
 
 SUNNDY_WEATHER_SUNNY_THRESHOLD = 7 # Hours per day
 DRY_WEATHER_PRECIP_THRESHOLD = 1 # mm per day
@@ -52,6 +52,13 @@ URBAN_GEOGRAPHY_POPULATION_THRESHOLD = 1000000 # population
 MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD = 1000 # m elevation
 MOUNTAIN_GEOGRAPHY_ELEVATION_DS_THRESHOLD = 200 # m elevation difference from airport to surrounding area
 
+TEMPERATURE_BANDS: Dict[str, Tuple[float, float]] = {
+    "hot": (HOT_WEATHER_TEMP_THRESHOLD[1], HOT_WEATHER_TEMP_THRESHOLD[0]),
+    "warm": (WARM_WETHER_TEMP_THRESHOLD[1], WARM_WETHER_TEMP_THRESHOLD[0]),
+    "mild": (MILD_WEATHER_TEMP_THRESHOLD[1], MILD_WEATHER_TEMP_THRESHOLD[0]),
+    "cool": (COOL_WEATHER_TEMP_THRESHOLD[1], COOL_WEATHER_TEMP_THRESHOLD[0]),
+    "cold": (COLD_WEATHER_TEMP_THRESHOLD[1], COLD_WEATHER_TEMP_THRESHOLD[0]),
+}
 
 
 def import_airport_data() -> List[Airport]:
@@ -100,40 +107,52 @@ def rank_temperature(airports: List[RankedAirport], filters: SearchFilters) -> L
         score = 0.0
 
         if filters.weather_preferences is not None:
-            temp_band = [100.0, 0.0] # default to no preference
+            temp_band: List[Optional[float]] = [None, None]
             score = 0.0
 
             if "hot" in filters.weather_preferences:
-                temp_band[0] = HOT_WEATHER_TEMP_THRESHOLD[0]
-                temp_band[1] = HOT_WEATHER_TEMP_THRESHOLD[1]
-            elif "warm" in filters.weather_preferences:
-                if WARM_WETHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                if temp_band[0] is None or HOT_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                    temp_band[0] = HOT_WEATHER_TEMP_THRESHOLD[0]
+                if temp_band[1] is None or HOT_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                    temp_band[1] = HOT_WEATHER_TEMP_THRESHOLD[1]
+
+            if "warm" in filters.weather_preferences:
+                if temp_band[0] is None or WARM_WETHER_TEMP_THRESHOLD[0] > temp_band[0]:
                     temp_band[0] = WARM_WETHER_TEMP_THRESHOLD[0]
-                if WARM_WETHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                if temp_band[1] is None or WARM_WETHER_TEMP_THRESHOLD[1] < temp_band[1]:
                     temp_band[1] = WARM_WETHER_TEMP_THRESHOLD[1]
-            elif "mild" in filters.weather_preferences:
-                if MILD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+
+            if "mild" in filters.weather_preferences:
+                if temp_band[0] is None or MILD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
                     temp_band[0] = MILD_WEATHER_TEMP_THRESHOLD[0]
-                if MILD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                if temp_band[1] is None or MILD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
                     temp_band[1] = MILD_WEATHER_TEMP_THRESHOLD[1]
-            elif "cool" in filters.weather_preferences:
-                if COOL_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+
+            if "cool" in filters.weather_preferences:
+                if temp_band[0] is None or COOL_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
                     temp_band[0] = COOL_WEATHER_TEMP_THRESHOLD[0]
-                if COOL_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                if temp_band[1] is None or COOL_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
                     temp_band[1] = COOL_WEATHER_TEMP_THRESHOLD[1]
-            elif "cold" in filters.weather_preferences:
-                if COLD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+
+            if "cold" in filters.weather_preferences:
+                if temp_band[0] is None or COLD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
                     temp_band[0] = COLD_WEATHER_TEMP_THRESHOLD[0]
-                if COLD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                if temp_band[1] is None or COLD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
                     temp_band[1] = COLD_WEATHER_TEMP_THRESHOLD[1]
 
-            
-            if temp_band[0] <= result[0] <= temp_band[1]:
+            if temp_band[0] is not None and temp_band[1] is not None:
+                if temp_band[0] >= result[0] >= temp_band[1]:
+                    score = 1.0
+                else:
+                    score = max(
+                        0.0,
+                        1.0 - (max(abs(result[0] - temp_band[0]), abs(result[0] - temp_band[1])) / 100.0),
+                    )
+            else:
                 score = 1.0
-            else:                
-                score = 1.0 - (max(abs(result[0] - temp_band[0]), abs(result[0] - temp_band[1])) / 100.0)
 
         ranked.append(RankedAirport(airport=airport, scores={"temperature": score}, percent_match=None))
+    conn.close()
     return ranked
 
 
@@ -161,5 +180,5 @@ if __name__ == "__main__":
     
     ranked_by_temp = rank_temperature(ranked_airports, parsed_filters)
     print(f"Ranked {len(ranked_by_temp)} airports by temperature:")
-    for ranked in ranked_by_temp[:5]:  # Print the first 5 ranked airports
-        print(ranked)
+    for ranked in ranked_by_temp[:25]:  # Print the first 5 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
