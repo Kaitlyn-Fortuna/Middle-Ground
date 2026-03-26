@@ -44,7 +44,7 @@ SUNNDY_WEATHER_SUNNY_THRESHOLD = 9.5 # Hours per day
 DRY_WEATHER_PRECIP_THRESHOLD = 1 # mm per day
 WET_WEATHER_PRECIP_THRESHOLD = 4 # mm per day
 LOW_HUMIDITY_THRESHOLD = 50 # percent
-HIGH_HUMIDITY_THRESHOLD = 80 # percent
+HIGH_HUMIDITY_THRESHOLD = 75 # percent
 
 COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD = 50 # mi to coast
 BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD = 20 # mi to beach
@@ -252,6 +252,55 @@ def rank_condition_rain(airports: List[RankedAirport], filters: SearchFilters) -
     return ranked
 
 
+def rank_condition_humidity(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    if filters.conditions_preferences is None or ("low humidity" not in filters.conditions_preferences and "high humidity" not in filters.conditions_preferences):
+        return airports
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT weather_humidity_yearly_average FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        score = 0.0
+
+        if filters.conditions_preferences is not None:
+            if "low humidity" in filters.conditions_preferences and "high humidity" in filters.conditions_preferences:
+                score_key = "low/high humidity"
+                if result[0] <= LOW_HUMIDITY_THRESHOLD:
+                    score = 1.0
+                elif result[0] >= HIGH_HUMIDITY_THRESHOLD:
+                    score = 1.0
+                else:
+                    low_score = max(0.0, 1.0 - (result[0] / (LOW_HUMIDITY_THRESHOLD * 10)))
+                    high_score = max(0.0, result[0] / HIGH_HUMIDITY_THRESHOLD)
+                    score = max(low_score, high_score)
+            elif "low humidity" in filters.conditions_preferences:
+                score_key = "low humidity"
+                if result[0] <= LOW_HUMIDITY_THRESHOLD:
+                    score = 1.0
+                elif result[0] >= HIGH_HUMIDITY_THRESHOLD:
+                    score = 0.0
+                else:
+                    score = (HIGH_HUMIDITY_THRESHOLD - result[0]) / (HIGH_HUMIDITY_THRESHOLD - LOW_HUMIDITY_THRESHOLD)
+            elif "high humidity" in filters.conditions_preferences:
+                score_key = "high humidity"
+                if result[0] >= HIGH_HUMIDITY_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, result[0] / HIGH_HUMIDITY_THRESHOLD)
+
+        ranked.append(_append_score(ranked_airport, score_key, score))
+
+    conn.close()
+    return ranked
 
 
 
@@ -286,3 +335,10 @@ if __name__ == "__main__":
     print(f"Ranked {len(ranked_airports)} airports by rain:")
     for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 
+
+    ranked_airports = rank_condition_humidity(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by humidity:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
+    
+

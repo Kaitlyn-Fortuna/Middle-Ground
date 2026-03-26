@@ -100,7 +100,7 @@ def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
 
 
 if __name__ == "__main__":
-    filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-test.json")
+    filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-sample.json")
     filters_data = load_filters_json(filters_path)
     print(filters_data)
     parsed_filters = parse_filters_json(filters_data)
