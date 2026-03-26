@@ -519,7 +519,7 @@ def overall_rank(airports: List[RankedAirport], filters: SearchFilters) -> RankR
 # =======================================
 
 if __name__ == "__main__":
-    filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-test.json")
+    filters_path = Path("data/filters-test.json")
     filters_data = load_filters_json(filters_path)
     parsed_filters = parse_filters_json(filters_data)
     
