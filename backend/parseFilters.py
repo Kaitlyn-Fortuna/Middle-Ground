@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+# ============================
+# ======== IMPORTS ===========
+# ============================
+
 import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 from dataclasses import dataclass
 
+
+# ================================
+# ======== DATA MODELS ===========
+# ================================
 
 @dataclass(frozen=True)
 class SearchFilters:
@@ -21,6 +29,10 @@ class SearchFilters:
 
     notes: Optional[str] = None  # user-entered notes or comments
 
+
+# ============================
+# ======== HELPERS ===========
+# ============================
 
 def load_filters_json(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
@@ -74,6 +86,11 @@ def _parse_optional_bool(value: Any) -> Optional[bool]:
             return False
     return None
 
+
+# =====================================
+# ======== PARSING FUNCTIONS ==========
+# =====================================
+
 def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
     weather = _first_present(data, ("weather_preferences", "Weather", "weather"))
     conditions = _first_present(data, ("conditions_preferences", "Conditions", "conditions"))
@@ -98,6 +115,9 @@ def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
     )
 
 
+# =======================================
+# =========== LOCAL TESTING =============
+# =======================================
 
 if __name__ == "__main__":
     filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-sample.json")

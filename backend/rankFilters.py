@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# ============================
+# ======== IMPORTS ===========
+# ============================
+
 from dataclasses import dataclass, field
 import math
 import sqlite3
@@ -8,6 +12,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Callable
 
 from parseFilters import SearchFilters, load_filters_json, parse_filters_json
+
+
+# ================================
+# ======== DATA MODELS ===========
+# ================================
 
 @dataclass(frozen=True)
 class Airport:
@@ -25,12 +34,16 @@ class RankedAirport:
     scores: Optional[Dict[str, float]]
     percent_match: Optional[float]
 
-
 @dataclass(frozen=True)
 class RankResult:
     ranked: List[RankedAirport]
     active_score_keys: List[str]
     diagnostics: Dict[str, object] = field(default_factory=dict)
+
+
+# ====================================
+# ======== SCORING CONSTANTS =========
+# ====================================
 
 DB_PATH = Path("data/airport_data.db")
 
@@ -46,9 +59,11 @@ WET_WEATHER_PRECIP_THRESHOLD = 4 # mm per day
 LOW_HUMIDITY_THRESHOLD = 50 # percent
 HIGH_HUMIDITY_THRESHOLD = 75 # percent
 
-COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD = 50 # mi to coast
-BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD = 20 # mi to beach
-URBAN_GEOGRAPHY_POPULATION_THRESHOLD = 1000000 # population
+COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD = 25 # mi to coast (full score)
+COSTAL_GEOGRAPHY_MAX_DISTANCE = 150 # mi to coast (zero score)
+BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD = 2 # mi to beach (full score)
+BEACH_GEOGRAPHY_MAX_DISTANCE = 25 # mi to beach (zero score)
+URBAN_GEOGRAPHY_POPULATION_SOFT_CAP = 5000000 # population
 MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD = 1000 # m elevation
 MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD = 200 # m elevation standard deviation from airport to surrounding area
 
@@ -60,6 +75,10 @@ TEMPERATURE_BANDS: Dict[str, Tuple[float, float]] = {
     "cold": (COLD_WEATHER_TEMP_THRESHOLD[1], COLD_WEATHER_TEMP_THRESHOLD[0]),
 }
 
+
+# ============================
+# ======== HELPERS ===========
+# ============================
 
 def import_airport_data() -> List[Airport]:
     conn = sqlite3.connect(DB_PATH)
@@ -99,7 +118,18 @@ def _append_score(ranked_airport: RankedAirport, score_key: str, score_value: fl
     )
 
 
+def _linear_distance_score(distance: float, full_score_distance: float, zero_score_distance: float) -> float:
+    if distance <= full_score_distance:
+        return 1.0
+    if distance >= zero_score_distance:
+        return 0.0
+    span = zero_score_distance - full_score_distance
+    return max(0.0, (zero_score_distance - distance) / span)
 
+
+# ======================================
+# ======== RANKING FUNCTIONS ===========
+# ======================================
 
 def rank_weather_temperature(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
     conn = sqlite3.connect(DB_PATH)
@@ -324,10 +354,11 @@ def rank_geography_coastal(airports: List[RankedAirport], filters: SearchFilters
 
         if filters.geography_preferences is not None and ("coastal" in filters.geography_preferences):
             score_key = "coastal"
-            if result[0] <= COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:
-                score = 1.0
-            else:
-                score = max(0.0, 1.0 - ((result[0] - COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+            score = _linear_distance_score(
+                result[0],
+                COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD,
+                COSTAL_GEOGRAPHY_MAX_DISTANCE,
+            )
 
         ranked.append(_append_score(ranked_airport, score_key, score))
 
@@ -356,10 +387,11 @@ def rank_geography_beach(airports: List[RankedAirport], filters: SearchFilters) 
 
         if filters.geography_preferences is not None and ("beach" in filters.geography_preferences):
             score_key = "beach"
-            if result[0] <= BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:
-                score = 1.0
-            else:
-                score = max(0.0, 1.0 - ((result[0] - BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+            score = _linear_distance_score(
+                result[0],
+                BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD,
+                BEACH_GEOGRAPHY_MAX_DISTANCE,
+            )
 
         ranked.append(_append_score(ranked_airport, score_key, score))
 
@@ -388,10 +420,10 @@ def rank_geography_urban(airports: List[RankedAirport], filters: SearchFilters) 
 
         if filters.geography_preferences is not None and ("urban" in filters.geography_preferences):
             score_key = "urban"
-            if result[0] >= URBAN_GEOGRAPHY_POPULATION_THRESHOLD:
+            if result[0] >= URBAN_GEOGRAPHY_POPULATION_SOFT_CAP:
                 score = 1.0
             else:
-                score = max(0.0, result[0] / URBAN_GEOGRAPHY_POPULATION_THRESHOLD)
+                score = max(0.0, math.log1p(result[0]) / math.log1p(URBAN_GEOGRAPHY_POPULATION_SOFT_CAP))
                 
         ranked.append(_append_score(ranked_airport, score_key, score))
 
@@ -444,6 +476,10 @@ def rank_geography_mountainous(airports: List[RankedAirport], filters: SearchFil
 
 
 
+
+# =======================================
+# =========== LOCAL TESTING =============
+# =======================================
 
 if __name__ == "__main__":
     filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-test.json")
