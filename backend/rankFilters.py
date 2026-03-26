@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Callable
 
-from parseFilters import SearchFilters
+from parseFilters import SearchFilters, load_filters_json, parse_filters_json
 
 @dataclass(frozen=True)
 class Airport:
@@ -32,12 +32,13 @@ class RankResult:
     active_score_keys: List[str]
     diagnostics: Dict[str, object] = field(default_factory=dict)
 
+DB_PATH = Path("data/airport_data.db")
 
-HOT_WEATHER_TEMP_THRESHOLD = 85.0  # Fahrenheit
-WARM_WETHER_TEMP_THRESHOLD = 70.0  # Fahrenheit
-MILD_WEATHER_TEMP_THRESHOLD = 55.0  # Fahrenheit
-COOL_WEATHER_TEMP_THRESHOLD = 40.0  # Fahrenheit
-COLD_WEATHER_TEMP_THRESHOLD = 00.0  # Fahrenheit
+HOT_WEATHER_TEMP_THRESHOLD = [100.0,85.0]  # Fahrenheit
+WARM_WETHER_TEMP_THRESHOLD = [85.0, 70.0]  # Fahrenheit
+MILD_WEATHER_TEMP_THRESHOLD = [70.0, 55.0]  # Fahrenheit
+COOL_WEATHER_TEMP_THRESHOLD = [55.0, 40.0]  # Fahrenheit
+COLD_WEATHER_TEMP_THRESHOLD = [40.0, 0.0]  # Fahrenheit
 
 SUNNDY_WEATHER_SUNNY_THRESHOLD = 7 # Hours per day
 DRY_WEATHER_PRECIP_THRESHOLD = 1 # mm per day
@@ -53,8 +54,8 @@ MOUNTAIN_GEOGRAPHY_ELEVATION_DS_THRESHOLD = 200 # m elevation difference from ai
 
 
 
-def import_airport_data(db_path: Path) -> List[Airport]:
-    conn = sqlite3.connect(db_path)
+def import_airport_data() -> List[Airport]:
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT iata_code, name, iso_country, iso_region, type, latitude, longitude FROM airport_data")
@@ -83,6 +84,59 @@ def initialize_ranked_airports(airports: List[Airport]) -> List[RankedAirport]:
 
 
 
+def rank_temperature(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT weather_temperature_yearly_average FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            continue
+
+        score = 0.0
+
+        if filters.weather_preferences is not None:
+            temp_band = [100.0, 0.0] # default to no preference
+            score = 0.0
+
+            if "hot" in filters.weather_preferences:
+                temp_band[0] = HOT_WEATHER_TEMP_THRESHOLD[0]
+                temp_band[1] = HOT_WEATHER_TEMP_THRESHOLD[1]
+            elif "warm" in filters.weather_preferences:
+                if WARM_WETHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                    temp_band[0] = WARM_WETHER_TEMP_THRESHOLD[0]
+                if WARM_WETHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                    temp_band[1] = WARM_WETHER_TEMP_THRESHOLD[1]
+            elif "mild" in filters.weather_preferences:
+                if MILD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                    temp_band[0] = MILD_WEATHER_TEMP_THRESHOLD[0]
+                if MILD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                    temp_band[1] = MILD_WEATHER_TEMP_THRESHOLD[1]
+            elif "cool" in filters.weather_preferences:
+                if COOL_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                    temp_band[0] = COOL_WEATHER_TEMP_THRESHOLD[0]
+                if COOL_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                    temp_band[1] = COOL_WEATHER_TEMP_THRESHOLD[1]
+            elif "cold" in filters.weather_preferences:
+                if COLD_WEATHER_TEMP_THRESHOLD[0] > temp_band[0]:
+                    temp_band[0] = COLD_WEATHER_TEMP_THRESHOLD[0]
+                if COLD_WEATHER_TEMP_THRESHOLD[1] < temp_band[1]:
+                    temp_band[1] = COLD_WEATHER_TEMP_THRESHOLD[1]
+
+            
+            if temp_band[0] <= result[0] <= temp_band[1]:
+                score = 1.0
+            else:                
+                score = 1.0 - (max(abs(result[0] - temp_band[0]), abs(result[0] - temp_band[1])) / 100.0)
+
+        ranked.append(RankedAirport(airport=airport, scores={"temperature": score}, percent_match=None))
+    return ranked
+
+
 
 
 
@@ -92,12 +146,20 @@ def initialize_ranked_airports(airports: List[Airport]) -> List[RankedAirport]:
 
 
 if __name__ == "__main__":
-    db_path = Path("data/airport_data.db")
-    airports = import_airport_data(db_path)
+    filters_path = Path("/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/filters-test.json")
+    filters_data = load_filters_json(filters_path)
+    parsed_filters = parse_filters_json(filters_data)
+    
+    airports = import_airport_data()
     print(f"Imported {len(airports)} airports:")
     for airport in airports[:5]:  # Print the first 5 airports
         print(airport)
     ranked_airports = initialize_ranked_airports(airports)
     print(f"Initialized {len(ranked_airports)} ranked airports:")
     for ranked in ranked_airports[:5]:  # Print the first 5 ranked airports
+        print(ranked)
+    
+    ranked_by_temp = rank_temperature(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_by_temp)} airports by temperature:")
+    for ranked in ranked_by_temp[:5]:  # Print the first 5 ranked airports
         print(ranked)

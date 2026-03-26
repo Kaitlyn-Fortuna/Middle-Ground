@@ -1,0 +1,11 @@
+{
+    "Weather": ["Hot"],
+    "Conditions": ["Sunny", "Dry", "Wet", "Low Humidity", "High Humidity"],
+    "Geography": ["Coastal", "Beach", "Urban", "Mountainous"],
+    "maxConnections": 3,
+    "maxFlightTime": 17,
+    "budgetCap": 3001,
+    "preferNonStop": false,
+    "domesticOnly": true,
+    "notes": "Notes"
+}
