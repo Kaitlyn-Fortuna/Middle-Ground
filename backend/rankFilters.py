@@ -50,7 +50,7 @@ COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD = 50 # mi to coast
 BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD = 20 # mi to beach
 URBAN_GEOGRAPHY_POPULATION_THRESHOLD = 1000000 # population
 MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD = 1000 # m elevation
-MOUNTAIN_GEOGRAPHY_ELEVATION_DS_THRESHOLD = 200 # m elevation difference from airport to surrounding area
+MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD = 200 # m elevation standard deviation from airport to surrounding area
 
 TEMPERATURE_BANDS: Dict[str, Tuple[float, float]] = {
     "hot": (HOT_WEATHER_TEMP_THRESHOLD[1], HOT_WEATHER_TEMP_THRESHOLD[0]),
@@ -322,13 +322,12 @@ def rank_geography_coastal(airports: List[RankedAirport], filters: SearchFilters
 
         score = 0.0
 
-        if filters.geography_preferences is not None:
-            if "coastal" in filters.geography_preferences:
-                score_key = "coastal"
-                if result[0] <= COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:
-                    score = 1.0
-                else:
-                    score = max(0.0, 1.0 - ((result[0] - COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+        if filters.geography_preferences is not None and ("coastal" in filters.geography_preferences):
+            score_key = "coastal"
+            if result[0] <= COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:
+                score = 1.0
+            else:
+                score = max(0.0, 1.0 - ((result[0] - COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
 
         ranked.append(_append_score(ranked_airport, score_key, score))
 
@@ -355,13 +354,12 @@ def rank_geography_beach(airports: List[RankedAirport], filters: SearchFilters) 
 
         score = 0.0
 
-        if filters.geography_preferences is not None:
-            if "beach" in filters.geography_preferences:
-                score_key = "beach"
-                if result[0] <= BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:
-                    score = 1.0
-                else:
-                    score = max(0.0, 1.0 - ((result[0] - BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+        if filters.geography_preferences is not None and ("beach" in filters.geography_preferences):
+            score_key = "beach"
+            if result[0] <= BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:
+                score = 1.0
+            else:
+                score = max(0.0, 1.0 - ((result[0] - BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
 
         ranked.append(_append_score(ranked_airport, score_key, score))
 
@@ -388,22 +386,57 @@ def rank_geography_urban(airports: List[RankedAirport], filters: SearchFilters) 
 
         score = 0.0
 
-        if filters.geography_preferences is not None:
-            if "urban" in filters.geography_preferences:
-                score_key = "urban"
-                if result[0] >= URBAN_GEOGRAPHY_POPULATION_THRESHOLD:
-                    score = 1.0
-                else:
-                    score = max(0.0, result[0] / URBAN_GEOGRAPHY_POPULATION_THRESHOLD)
+        if filters.geography_preferences is not None and ("urban" in filters.geography_preferences):
+            score_key = "urban"
+            if result[0] >= URBAN_GEOGRAPHY_POPULATION_THRESHOLD:
+                score = 1.0
+            else:
+                score = max(0.0, result[0] / URBAN_GEOGRAPHY_POPULATION_THRESHOLD)
                 
-
         ranked.append(_append_score(ranked_airport, score_key, score))
 
     conn.close()
     return ranked
 
 
+def rank_geography_mountainous(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
 
+    if filters.geography_preferences is None or ("mountainous" not in filters.geography_preferences):
+        return airports
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT relief_value, stddev_value FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        elevation_score = 0.0
+        rugged_score = 0.0
+
+        if filters.geography_preferences is not None and ("mountainous" in filters.geography_preferences):
+            score_key = "mountainous"
+            if result[0] >= MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD:
+                elevation_score = 1.0
+            else:
+                elevation_score = max(0.0, result[0] / MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD)
+
+            if result[1] >= MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD:
+                rugged_score = 1.0
+            else:
+                rugged_score = max(0.0, result[1] / MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD)
+
+        score = ((elevation_score * 0.65) + (rugged_score * 0.35))
+
+        ranked.append(_append_score(ranked_airport, score_key, score))
+
+    conn.close()
+    return ranked
 
 
 
@@ -461,4 +494,7 @@ if __name__ == "__main__":
     for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 
 
-        
+    ranked_airports = rank_geography_mountainous(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by mountainous geography:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
