@@ -101,7 +101,7 @@ def _append_score(ranked_airport: RankedAirport, score_key: str, score_value: fl
 
 
 
-def rank_temperature(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+def rank_weather_temperature(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
     conn = sqlite3.connect(DB_PATH)
     ranked = []
 
@@ -303,6 +303,111 @@ def rank_condition_humidity(airports: List[RankedAirport], filters: SearchFilter
     return ranked
 
 
+def rank_geography_coastal(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    if filters.geography_preferences is None or ("coastal" not in filters.geography_preferences):
+        return airports
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT coastal_distance FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        score = 0.0
+
+        if filters.geography_preferences is not None:
+            if "coastal" in filters.geography_preferences:
+                score_key = "coastal"
+                if result[0] <= COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, 1.0 - ((result[0] - COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+
+        ranked.append(_append_score(ranked_airport, score_key, score))
+
+    conn.close()
+    return ranked
+
+
+def rank_geography_beach(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    if filters.geography_preferences is None or ("beach" not in filters.geography_preferences):
+        return airports
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT beach_distance FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        score = 0.0
+
+        if filters.geography_preferences is not None:
+            if "beach" in filters.geography_preferences:
+                score_key = "beach"
+                if result[0] <= BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, 1.0 - ((result[0] - BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD) / 100.0))
+
+        ranked.append(_append_score(ranked_airport, score_key, score))
+
+    conn.close()
+    return ranked
+
+
+def rank_geography_urban(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    if filters.geography_preferences is None or ("urban" not in filters.geography_preferences):
+        return airports
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT population FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        score = 0.0
+
+        if filters.geography_preferences is not None:
+            if "urban" in filters.geography_preferences:
+                score_key = "urban"
+                if result[0] >= URBAN_GEOGRAPHY_POPULATION_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, result[0] / URBAN_GEOGRAPHY_POPULATION_THRESHOLD)
+                
+
+        ranked.append(_append_score(ranked_airport, score_key, score))
+
+    conn.close()
+    return ranked
+
+
+
+
+
+
+
 
 
 
@@ -321,7 +426,7 @@ if __name__ == "__main__":
     for ranked in ranked_airports[:5]:  # Print the first 5 ranked airports
         print(ranked)
     
-    ranked_airports = rank_temperature(ranked_airports, parsed_filters)
+    ranked_airports = rank_weather_temperature(ranked_airports, parsed_filters)
     print(f"Ranked {len(ranked_airports)} airports by temperature:")
     for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
@@ -341,4 +446,19 @@ if __name__ == "__main__":
     for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
     
+    ranked_airports = rank_geography_coastal(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by coastal geography:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
 
+    ranked_airports = rank_geography_beach(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by beach geography:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
+
+    ranked_airports = rank_geography_urban(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by urban geography:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 
+
+        
