@@ -4,7 +4,7 @@ from flask_cors import CORS
 from parseFilters import (
     parse_filters_api_json
 )
-from rankFilters import (
+from airportFiltering import (
     format_rank_results,
     import_airport_data,
     initialize_ranked_airports,
