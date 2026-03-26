@@ -42,7 +42,7 @@ COLD_WEATHER_TEMP_THRESHOLD = [4.0, -20.0]  # Celsius
 
 SUNNDY_WEATHER_SUNNY_THRESHOLD = 9.5 # Hours per day
 DRY_WEATHER_PRECIP_THRESHOLD = 1 # mm per day
-WET_WEATHER_PRECIP_THRESHOLD = 3.5 # mm per day
+WET_WEATHER_PRECIP_THRESHOLD = 4 # mm per day
 LOW_HUMIDITY_THRESHOLD = 50 # percent
 HIGH_HUMIDITY_THRESHOLD = 80 # percent
 
@@ -104,6 +104,9 @@ def _append_score(ranked_airport: RankedAirport, score_key: str, score_value: fl
 def rank_temperature(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
     conn = sqlite3.connect(DB_PATH)
     ranked = []
+
+    if filters.weather_preferences is None:
+        return airports
 
     for ranked_airport in airports:
         airport = ranked_airport.airport
@@ -170,6 +173,9 @@ def rank_condition_sun(airports: List[RankedAirport], filters: SearchFilters) ->
     conn = sqlite3.connect(DB_PATH)
     ranked = []
 
+    if filters.conditions_preferences is None or "sunny" not in filters.conditions_preferences:
+        return airports
+
     for ranked_airport in airports:
         airport = ranked_airport.airport
         cursor = conn.cursor()
@@ -189,7 +195,7 @@ def rank_condition_sun(airports: List[RankedAirport], filters: SearchFilters) ->
                 else:
                     score = max(0.0, result[0] / SUNNDY_WEATHER_SUNNY_THRESHOLD)
 
-        ranked.append(_append_score(ranked_airport, "sun", score))
+        ranked.append(_append_score(ranked_airport, "sunny", score))
 
     conn.close()
     return ranked
@@ -198,6 +204,9 @@ def rank_condition_sun(airports: List[RankedAirport], filters: SearchFilters) ->
 def rank_condition_rain(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
     conn = sqlite3.connect(DB_PATH)
     ranked = []
+
+    if filters.conditions_preferences is None or ("wet" not in filters.conditions_preferences and "dry" not in filters.conditions_preferences):
+        return airports
 
     for ranked_airport in airports:
         airport = ranked_airport.airport
@@ -213,6 +222,7 @@ def rank_condition_rain(airports: List[RankedAirport], filters: SearchFilters) -
 
         if filters.conditions_preferences is not None:
             if "dry" in filters.conditions_preferences and "wet" in filters.conditions_preferences:
+                score_key = "dry/wet"
                 if result[0] <= DRY_WEATHER_PRECIP_THRESHOLD:
                     score = 1.0
                 elif result[0] >= WET_WEATHER_PRECIP_THRESHOLD:
@@ -222,17 +232,21 @@ def rank_condition_rain(airports: List[RankedAirport], filters: SearchFilters) -
                     wet_score = max(0.0, result[0] / WET_WEATHER_PRECIP_THRESHOLD)
                     score = max(dry_score, wet_score)
             elif "dry" in filters.conditions_preferences:
+                score_key = "dry"
                 if result[0] <= DRY_WEATHER_PRECIP_THRESHOLD:
                     score = 1.0
+                elif result[0] >= WET_WEATHER_PRECIP_THRESHOLD:
+                    score = 0.0
                 else:
-                    score = max(0.0, 1.0 - (result[0] / (DRY_WEATHER_PRECIP_THRESHOLD * 10)))
+                    score = (WET_WEATHER_PRECIP_THRESHOLD - result[0]) / (WET_WEATHER_PRECIP_THRESHOLD - DRY_WEATHER_PRECIP_THRESHOLD)
             elif "wet" in filters.conditions_preferences:
+                score_key = "wet"
                 if result[0] >= WET_WEATHER_PRECIP_THRESHOLD:
                     score = 1.0
                 else:
                     score = max(0.0, result[0] / WET_WEATHER_PRECIP_THRESHOLD)
 
-        ranked.append(_append_score(ranked_airport, "rain", score))
+        ranked.append(_append_score(ranked_airport, score_key, score))
 
     conn.close()
     return ranked
