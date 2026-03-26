@@ -8,20 +8,54 @@
   </head>
   <body>
     <main class="container">
-      <h1>Flask API Localhost Demo</h1>
-      <p>Frontend (this page) calls backend at <code>http://127.0.0.1:5001</code>.</p>
+      <h1>Crude Filter Tester</h1>
+      <p>Use this page to quickly test filter payloads against the Flask API at <code>http://127.0.0.1:5001</code>.</p>
 
       <section class="controls">
         <button id="healthBtn">Check Health</button>
-
-        <label for="valueInput">Compute input:</label>
-        <input id="valueInput" type="number" value="10" min="1" />
-        <button id="computeBtn">Run Compute</button>
       </section>
 
       <section>
-        <h2>Response</h2>
-        <pre id="output">Click a button to call the Flask API...</pre>
+        <h2>Filters</h2>
+
+        <h3>Weather</h3>
+        <label><input type="checkbox" id="weather-hot" /> hot</label>
+        <label><input type="checkbox" id="weather-warm" /> warm</label>
+        <label><input type="checkbox" id="weather-mild" /> mild</label>
+        <label><input type="checkbox" id="weather-cool" /> cool</label>
+        <label><input type="checkbox" id="weather-cold" /> cold</label>
+
+        <h3>Conditions</h3>
+        <label><input type="checkbox" id="conditions-sunny" /> sunny</label>
+        <label><input type="checkbox" id="conditions-dry" /> dry</label>
+        <label><input type="checkbox" id="conditions-wet" /> wet</label>
+        <label><input type="checkbox" id="conditions-low-humidity" /> low humidity</label>
+        <label><input type="checkbox" id="conditions-high-humidity" /> high humidity</label>
+
+        <h3>Geography</h3>
+        <label><input type="checkbox" id="geography-coastal" /> coastal</label>
+        <label><input type="checkbox" id="geography-beach" /> beach</label>
+        <label><input type="checkbox" id="geography-urban" /> urban</label>
+        <label><input type="checkbox" id="geography-mountainous" /> mountainous</label>
+
+        <div class="controls" style="margin-top: 1rem;">
+          <button id="buildPayloadBtn">Build Payload</button>
+          <button id="rankBtn">POST /api/rank</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Request Payload Preview</h2>
+        <pre id="requestPayload">{
+  "weather_preferences": [],
+  "conditions_preferences": [],
+  "geography_preferences": []
+}</pre>
+      </section>
+
+      <section>
+        <h2>API Response</h2>
+        <pre id="output">Run a request to see API response JSON here...</pre>
       </section>
     </main>
 

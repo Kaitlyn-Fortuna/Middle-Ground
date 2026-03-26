@@ -510,6 +510,18 @@ def overall_rank(airports: List[RankedAirport], filters: SearchFilters) -> RankR
     return RankResult(ranked=ranked, active_score_keys=list(active_score_keys))
 
 
+def format_rank_results(rank_result: RankResult, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    ranked = rank_result.ranked if limit is None else rank_result.ranked[:limit]
+    formatted_results: List[Dict[str, Any]] = []
+
+    for idx, ranked_airport in enumerate(ranked, start=1):
+        formatted_results.append({
+            "rank": idx,
+            "iata_code": ranked_airport.airport.iata_code,
+            "percent_match": round(ranked_airport.percent_match, 3) if ranked_airport.percent_match is not None else None,
+        })
+
+    return formatted_results
 
 
 

@@ -115,6 +115,22 @@ def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
     )
 
 
+def parse_filters_api_json(payload: Any) -> SearchFilters:
+    if payload is None:
+        return SearchFilters()
+
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            return SearchFilters()
+
+    if not isinstance(payload, dict):
+        return SearchFilters()
+
+    return parse_filters_json(payload)
+
+
 # =======================================
 # =========== LOCAL TESTING =============
 # =======================================

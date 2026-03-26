@@ -1,7 +1,16 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from backend.parseFilters import SearchFilters, load_filters_json, parse_filters_json
+from parseFilters import (
+    parse_filters_api_json
+)
+from rankFilters import (
+    format_rank_results,
+    import_airport_data,
+    initialize_ranked_airports,
+    overall_rank,
+    run_all_ranks,
+)
 
 
 app = Flask(__name__)
@@ -24,22 +33,37 @@ def health_check():
     return jsonify({"status": "ok", "message": "Flask server is running"})
 
 
-@app.get("/api/compute")
-def compute():
-    value = request.args.get("value", default=10, type=int)
+@app.post("/api/rank")
+def rank_airports():
+    payload = request.get_json(silent=True)
+    filters = parse_filters_api_json(payload)
 
-    if value < 1:
-        return jsonify({"error": "value must be >= 1"}), 400
+    limit_raw = request.args.get("limit")
+    limit = None
+    if limit_raw is not None:
+        try:
+            limit = max(1, int(limit_raw))
+        except ValueError:
+            return jsonify({"status": "error", "message": "Query param 'limit' must be an integer"}), 400
 
-    result = sum(i * i for i in range(1, value + 1))
+    try:
+        airports = import_airport_data()
+        ranked_airports = initialize_ranked_airports(airports)
+        final_rank = overall_rank(run_all_ranks(ranked_airports, filters), filters)
+        results = format_rank_results(final_rank, limit=limit)
 
-    return jsonify(
-        {
-            "input": value,
-            "result": result,
-            "description": "Sum of squares from 1..value",
-        }
-    )
+        return jsonify(
+            {
+                "status": "ok",
+                "count": len(results),
+                "results": results,
+            }
+        )
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
+
+
+
 
 
 if __name__ == "__main__":
