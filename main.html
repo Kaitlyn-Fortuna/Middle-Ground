@@ -8,55 +8,78 @@
   </head>
   <body>
     <main class="container">
-      <h1>Crude Filter Tester</h1>
-      <p>Use this page to quickly test filter payloads against the Flask API at <code>http://127.0.0.1:5001</code>.</p>
-
-      <section class="controls">
-        <button id="healthBtn">Check Health</button>
-      </section>
-
-      <section>
-        <h2>Filters</h2>
-
-        <h3>Weather</h3>
-        <label><input type="checkbox" id="weather-hot" /> hot</label>
-        <label><input type="checkbox" id="weather-warm" /> warm</label>
-        <label><input type="checkbox" id="weather-mild" /> mild</label>
-        <label><input type="checkbox" id="weather-cool" /> cool</label>
-        <label><input type="checkbox" id="weather-cold" /> cold</label>
-
-        <h3>Conditions</h3>
-        <label><input type="checkbox" id="conditions-sunny" /> sunny</label>
-        <label><input type="checkbox" id="conditions-dry" /> dry</label>
-        <label><input type="checkbox" id="conditions-wet" /> wet</label>
-        <label><input type="checkbox" id="conditions-low-humidity" /> low humidity</label>
-        <label><input type="checkbox" id="conditions-high-humidity" /> high humidity</label>
-
-        <h3>Geography</h3>
-        <label><input type="checkbox" id="geography-coastal" /> coastal</label>
-        <label><input type="checkbox" id="geography-beach" /> beach</label>
-        <label><input type="checkbox" id="geography-urban" /> urban</label>
-        <label><input type="checkbox" id="geography-mountainous" /> mountainous</label>
-
-        <div class="controls" style="margin-top: 1rem;">
-          <button id="buildPayloadBtn">Build Payload</button>
-          <button id="rankBtn">POST /api/rank</button>
+      <header class="hero panel">
+        <div>
+          <h1>MiddleGround Filter Tester</h1>
+          <p class="subtitle">
+            Build destination preferences and test them against the Flask API at
+            <code>http://127.0.0.1:5001</code>.
+          </p>
         </div>
-      </section>
+        <div class="controls">
+          <button id="healthBtn" class="btn-secondary">Check Health</button>
+        </div>
+      </header>
 
-      <section>
-        <h2>Request Payload Preview</h2>
-        <pre id="requestPayload">{
+      <div class="layout-grid">
+        <section class="panel">
+          <h2>Filters</h2>
+          <p class="section-hint">Select the travel profile you want. Leave categories blank to skip them.</p>
+
+          <div class="filter-group">
+            <h3>Weather</h3>
+            <div class="option-grid">
+              <label class="check-item"><input type="checkbox" id="weather-hot" /> hot</label>
+              <label class="check-item"><input type="checkbox" id="weather-warm" /> warm</label>
+              <label class="check-item"><input type="checkbox" id="weather-mild" /> mild</label>
+              <label class="check-item"><input type="checkbox" id="weather-cool" /> cool</label>
+              <label class="check-item"><input type="checkbox" id="weather-cold" /> cold</label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h3>Conditions</h3>
+            <div class="option-grid">
+              <label class="check-item"><input type="checkbox" id="conditions-sunny" /> sunny</label>
+              <label class="check-item"><input type="checkbox" id="conditions-dry" /> dry</label>
+              <label class="check-item"><input type="checkbox" id="conditions-wet" /> wet</label>
+              <label class="check-item"><input type="checkbox" id="conditions-low-humidity" /> low humidity</label>
+              <label class="check-item"><input type="checkbox" id="conditions-high-humidity" /> high humidity</label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h3>Geography</h3>
+            <div class="option-grid">
+              <label class="check-item"><input type="checkbox" id="geography-coastal" /> coastal</label>
+              <label class="check-item"><input type="checkbox" id="geography-beach" /> beach</label>
+              <label class="check-item"><input type="checkbox" id="geography-urban" /> urban</label>
+              <label class="check-item"><input type="checkbox" id="geography-mountainous" /> mountainous</label>
+            </div>
+          </div>
+
+          <div class="controls controls-tight">
+            <button id="buildPayloadBtn" class="btn-secondary">Build Payload</button>
+            <button id="rankBtn" class="btn-primary">Run Ranking</button>
+          </div>
+        </section>
+
+        <section class="panel stack">
+          <div>
+            <h2>Request Payload</h2>
+            <pre id="requestPayload">{
   "weather_preferences": [],
   "conditions_preferences": [],
   "geography_preferences": []
 }</pre>
-      </section>
+          </div>
 
-      <section>
-        <h2>API Response</h2>
-        <pre id="output">Run a request to see API response JSON here...</pre>
-      </section>
+          <div>
+            <h2>API Response</h2>
+            <pre id="output">Run a request to see API response JSON here...</pre>
+          </div>
+        </section>
+      </div>
     </main>
 
     <script type="module" src="main.js"></script>
