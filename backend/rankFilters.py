@@ -42,7 +42,7 @@ COLD_WEATHER_TEMP_THRESHOLD = [4.0, -20.0]  # Celsius
 
 SUNNDY_WEATHER_SUNNY_THRESHOLD = 9.5 # Hours per day
 DRY_WEATHER_PRECIP_THRESHOLD = 1 # mm per day
-WET_WEATHER_PRECIP_THRESHOLD = 5 # mm per day
+WET_WEATHER_PRECIP_THRESHOLD = 3.5 # mm per day
 LOW_HUMIDITY_THRESHOLD = 50 # percent
 HIGH_HUMIDITY_THRESHOLD = 80 # percent
 
@@ -182,13 +182,57 @@ def rank_condition_sun(airports: List[RankedAirport], filters: SearchFilters) ->
 
         score = 0.0
 
-        if filters.weather_preferences is not None:
-            if result[0] >= SUNNDY_WEATHER_SUNNY_THRESHOLD:
-                score = 1.0
-            else:
-                score = max(0.0, result[0] / SUNNDY_WEATHER_SUNNY_THRESHOLD)
+        if filters.conditions_preferences is not None:
+            if "sunny" in filters.conditions_preferences:
+                if result[0] >= SUNNDY_WEATHER_SUNNY_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, result[0] / SUNNDY_WEATHER_SUNNY_THRESHOLD)
 
         ranked.append(_append_score(ranked_airport, "sun", score))
+
+    conn.close()
+    return ranked
+
+
+def rank_condition_rain(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    conn = sqlite3.connect(DB_PATH)
+    ranked = []
+
+    for ranked_airport in airports:
+        airport = ranked_airport.airport
+        cursor = conn.cursor()
+        cursor.execute("SELECT weather_precip_yearly_average FROM airport_data WHERE iata_code = ?", (airport.iata_code,))
+        result = cursor.fetchone()
+        
+        if result is None:
+            ranked.append(ranked_airport)
+            continue
+
+        score = 0.0
+
+        if filters.conditions_preferences is not None:
+            if "dry" in filters.conditions_preferences and "wet" in filters.conditions_preferences:
+                if result[0] <= DRY_WEATHER_PRECIP_THRESHOLD:
+                    score = 1.0
+                elif result[0] >= WET_WEATHER_PRECIP_THRESHOLD:
+                    score = 1.0
+                else:
+                    dry_score = max(0.0, 1.0 - (result[0] / (DRY_WEATHER_PRECIP_THRESHOLD * 10)))
+                    wet_score = max(0.0, result[0] / WET_WEATHER_PRECIP_THRESHOLD)
+                    score = max(dry_score, wet_score)
+            elif "dry" in filters.conditions_preferences:
+                if result[0] <= DRY_WEATHER_PRECIP_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, 1.0 - (result[0] / (DRY_WEATHER_PRECIP_THRESHOLD * 10)))
+            elif "wet" in filters.conditions_preferences:
+                if result[0] >= WET_WEATHER_PRECIP_THRESHOLD:
+                    score = 1.0
+                else:
+                    score = max(0.0, result[0] / WET_WEATHER_PRECIP_THRESHOLD)
+
+        ranked.append(_append_score(ranked_airport, "rain", score))
 
     conn.close()
     return ranked
@@ -216,10 +260,15 @@ if __name__ == "__main__":
     
     ranked_airports = rank_temperature(ranked_airports, parsed_filters)
     print(f"Ranked {len(ranked_airports)} airports by temperature:")
-    for ranked in ranked_airports[:25]:  # Print the first 5 ranked airports
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
 
     ranked_airports = rank_condition_sun(ranked_airports, parsed_filters)
     print(f"Ranked {len(ranked_airports)} airports by sun:")
-    for ranked in ranked_airports[:25]:  # Print the first 5 ranked airports
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
         print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
+
+    ranked_airports = rank_condition_rain(ranked_airports, parsed_filters)
+    print(f"Ranked {len(ranked_airports)} airports by rain:")
+    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
+        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 

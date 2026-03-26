@@ -1,6 +1,6 @@
 {
     "Weather": ["Hot"],
-    "Conditions": ["Sunny", "Dry", "Wet", "Low Humidity", "High Humidity"],
+    "Conditions": ["Sunny", "Wet", "High Humidity"],
     "Geography": ["Coastal", "Beach", "Urban", "Mountainous"],
     "maxConnections": 3,
     "maxFlightTime": 17,
