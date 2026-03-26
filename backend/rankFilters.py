@@ -471,6 +471,43 @@ def rank_geography_mountainous(airports: List[RankedAirport], filters: SearchFil
     return ranked
 
 
+def run_all_ranks(airports: List[RankedAirport], filters: SearchFilters) -> List[RankedAirport]:
+    ranked = rank_weather_temperature(airports, filters)
+    ranked = rank_condition_sun(ranked, filters)
+    ranked = rank_condition_rain(ranked, filters)
+    ranked = rank_condition_humidity(ranked, filters)
+    ranked = rank_geography_coastal(ranked, filters)
+    ranked = rank_geography_beach(ranked, filters)
+    ranked = rank_geography_urban(ranked, filters)
+    ranked = rank_geography_mountainous(ranked, filters)
+    return ranked
+
+
+def overall_rank(airports: List[RankedAirport], filters: SearchFilters) -> RankResult:
+    ranked = []
+    active_score_keys: Set[str] = set()
+
+    for ranked_airport in airports:
+        if ranked_airport.scores is None:
+            ranked.append(ranked_airport)
+            continue
+
+        total_score = 0.0
+        count = 0
+        for key, value in ranked_airport.scores.items():
+            total_score += value
+            count += 1
+            active_score_keys.add(key)
+
+        percent_match = (total_score / count) if count > 0 else None
+        ranked.append(RankedAirport(
+            airport=ranked_airport.airport,
+            scores=ranked_airport.scores,
+            percent_match=percent_match,
+        ))
+
+    ranked.sort(key=lambda x: (x.percent_match if x.percent_match is not None else -1), reverse=True)
+    return RankResult(ranked=ranked, active_score_keys=list(active_score_keys))
 
 
 
@@ -487,50 +524,10 @@ if __name__ == "__main__":
     parsed_filters = parse_filters_json(filters_data)
     
     airports = import_airport_data()
-    print(f"Imported {len(airports)} airports:")
-    for airport in airports[:5]:  # Print the first 5 airports
-        print(airport)
     ranked_airports = initialize_ranked_airports(airports)
-    print(f"Initialized {len(ranked_airports)} ranked airports:")
-    for ranked in ranked_airports[:5]:  # Print the first 5 ranked airports
-        print(ranked)
-    
-    ranked_airports = rank_weather_temperature(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by temperature:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
 
-    ranked_airports = rank_condition_sun(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by sun:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
-
-    ranked_airports = rank_condition_rain(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by rain:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 
-
-    ranked_airports = rank_condition_humidity(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by humidity:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
-    
-    ranked_airports = rank_geography_coastal(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by coastal geography:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
-
-    ranked_airports = rank_geography_beach(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by beach geography:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
-
-    ranked_airports = rank_geography_urban(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by urban geography:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores) 
-
-    ranked_airports = rank_geography_mountainous(ranked_airports, parsed_filters)
-    print(f"Ranked {len(ranked_airports)} airports by mountainous geography:")
-    for ranked in ranked_airports[:25]:  # Print the first 25 ranked airports
-        print(ranked.airport.iata_code, ranked.airport.name, ranked.scores)
+    final_rank = overall_rank(run_all_ranks(ranked_airports, parsed_filters), parsed_filters)
+    print(f"Final overall rank of {len(final_rank.ranked)} airports:")
+    for idx, ranked in enumerate(final_rank.ranked[:25], start=1):  # Print the first 25 ranked airports
+        percent_text = f"{ranked.percent_match:.3f}" if ranked.percent_match is not None else "N/A"
+        print(f"{idx} | {ranked.airport.iata_code} | {ranked.airport.name} | {percent_text}")
