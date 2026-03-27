@@ -7,13 +7,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set
+from typing import Any, Dict, List, Optional, Set
 from datetime import datetime
 
 from parseResults import (
-    FlightResult,
-    load_results_json,
-    parse_results_json,
+    Flight,
+    load_flights_dataset_json,
 )
 from parseFilters import (
     SearchFilters,
@@ -32,17 +31,6 @@ from airportFiltering import (
 # ================================
 # ======== DATA MODELS ===========
 # ================================
-
-@dataclass(frozen=True)
-class Flight:
-    raw_result: FlightResult
-    departure_iata: Optional[str]
-    arrival_iata: Optional[str]
-    flight_date: Optional[str]
-    flight_status: Optional[str]
-    flight_iata: Optional[str]
-    airline_iata: Optional[str]
-
 
 @dataclass(frozen=True)
 class RankedFlight:
@@ -78,23 +66,6 @@ def _append_flight_score(ranked_flight: RankedFlight, score_key: str, score_valu
         scores=merged_scores,
         percent_match=ranked_flight.percent_match,
     )
-
-
-def normalize_results_to_flights(results: Sequence[FlightResult]) -> List[Flight]:
-    flights: List[Flight] = []
-    for result in results:
-        flights.append(
-            Flight(
-                raw_result=result,
-                departure_iata=result.departure.iata,
-                arrival_iata=result.arrival.iata,
-                flight_date=result.flight_date,
-                flight_status=result.flight_status,
-                flight_iata=result.flight.iata,
-                airline_iata=result.airline.iata,
-            )
-        )
-    return flights
 
 
 def initialize_ranked_flights(flights: List[Flight], destination_rank_map: Optional[Dict[str, RankedAirport]] = None) -> List[RankedFlight]:
@@ -156,6 +127,63 @@ def rank_logistic_flight_time(flights: List[RankedFlight], filters: SearchFilter
     return ranked
 
 
+def run_all_flight_ranks(flights: List[RankedFlight], filters: SearchFilters) -> List[RankedFlight]:
+    ranked = rank_logistic_flight_time(flights, filters)
+    return ranked
+
+
+def overall_flight_rank(flights: List[RankedFlight], filters: SearchFilters) -> FlightRankResult:
+    ranked: List[RankedFlight] = []
+    active_score_keys: Set[str] = set()
+
+    for ranked_flight in flights:
+        if ranked_flight.scores is None:
+            ranked.append(ranked_flight)
+            continue
+
+        total_score = 0.0
+        count = 0
+        for key, value in ranked_flight.scores.items():
+            total_score += value
+            count += 1
+            active_score_keys.add(key)
+
+        percent_match = (total_score / count) if count > 0 else None
+        ranked.append(
+            RankedFlight(
+                flight=ranked_flight.flight,
+                destination_airport_rank=ranked_flight.destination_airport_rank,
+                scores=ranked_flight.scores,
+                percent_match=percent_match,
+            )
+        )
+
+    ranked.sort(key=lambda x: (x.percent_match if x.percent_match is not None else -1), reverse=True)
+    return FlightRankResult(ranked=ranked, active_score_keys=list(active_score_keys))
+
+
+def format_flight_rank_results(rank_result: FlightRankResult, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    ranked = rank_result.ranked if limit is None else rank_result.ranked[:limit]
+    formatted_results: List[Dict[str, Any]] = []
+
+    for idx, ranked_flight in enumerate(ranked, start=1):
+        formatted_results.append(
+            {
+                "rank": idx,
+                "flight_iata": ranked_flight.flight.flight_iata,
+                "departure_iata": ranked_flight.flight.departure_iata,
+                "arrival_iata": ranked_flight.flight.arrival_iata,
+                "airline_iata": ranked_flight.flight.airline_iata,
+                "percent_match": round(ranked_flight.percent_match, 3)
+                if ranked_flight.percent_match is not None
+                else None,
+                "scores": ranked_flight.scores,
+            }
+        )
+
+    return formatted_results
+
+
 # =======================================
 # =========== LOCAL TESTING =============
 # =======================================
@@ -166,14 +194,14 @@ if __name__ == "__main__":
     parsed_filters = parse_filters_json(filters_data)
 
     results_path = Path("data/results-test.json")
-    results_data = load_results_json(results_path)
-    parsed_results = parse_results_json(results_data)
-
-    flights = normalize_results_to_flights([parsed_results])
+    flights = load_flights_dataset_json(results_path)
 
     ranked_flights = initialize_ranked_flights(flights)
-    ranked_flights = rank_logistic_flight_time(ranked_flights, parsed_filters)
+    ranked_flights = run_all_flight_ranks(ranked_flights, parsed_filters)
 
-    print(f"Ranked {len(ranked_flights)} flights by flight time:")
-    for ranked in ranked_flights[:25]:  # Print the first 25 ranked flights
-        print(ranked.flight.flight_iata, ranked.flight.departure_iata, ranked.flight.arrival_iata, ranked.scores)
+    final_rank = overall_flight_rank(ranked_flights, parsed_filters)
+    print(f"Final overall rank of {len(final_rank.ranked)} flights:")
+    for ranked in final_rank.ranked[:25]:  # Print the first 25 ranked flights
+        print(ranked.flight.flight_iata, ranked.flight.departure_iata, ranked.flight.arrival_iata, ranked.percent_match)
+
+    print(json.dumps(format_flight_rank_results(final_rank, limit=25), indent=2))

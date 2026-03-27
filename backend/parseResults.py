@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 from dataclasses import dataclass, field
 
 
@@ -58,6 +58,17 @@ class FlightResult:
 	live: Optional[Dict[str, Any]] = None
 
 
+@dataclass(frozen=True)
+class Flight:
+	raw_result: FlightResult
+	departure_iata: Optional[str]
+	arrival_iata: Optional[str]
+	flight_date: Optional[str]
+	flight_status: Optional[str]
+	flight_iata: Optional[str]
+	airline_iata: Optional[str]
+
+
 # ============================
 # ======== HELPERS ===========
 # ============================
@@ -99,6 +110,28 @@ def _parse_optional_dict(value: Any) -> Optional[Dict[str, Any]]:
 	if isinstance(value, dict):
 		return value
 	return None
+
+
+def _coerce_results_dataset(payload: Any) -> Sequence[Any]:
+	if payload is None:
+		return []
+
+	if isinstance(payload, str):
+		try:
+			payload = json.loads(payload)
+		except json.JSONDecodeError:
+			return []
+
+	if isinstance(payload, list):
+		return payload
+
+	if isinstance(payload, dict):
+		data = payload.get("data")
+		if isinstance(data, list):
+			return data
+		return [payload]
+
+	return []
 
 
 # =====================================
@@ -178,6 +211,43 @@ def parse_results_api_json(payload: Any) -> FlightResult:
 	return parse_results_json(payload)
 
 
+def parse_results_dataset_json(payload: Any) -> List[FlightResult]:
+	results: List[FlightResult] = []
+	for item in _coerce_results_dataset(payload):
+		if isinstance(item, dict):
+			results.append(parse_results_json(item))
+	return results
+
+
+def parse_results_dataset_api_json(payload: Any) -> List[FlightResult]:
+	return parse_results_dataset_json(payload)
+
+
+def normalize_results_to_flights(results: Sequence[FlightResult]) -> List[Flight]:
+	flights: List[Flight] = []
+	for result in results:
+		flights.append(
+			Flight(
+				raw_result=result,
+				departure_iata=result.departure.iata,
+				arrival_iata=result.arrival.iata,
+				flight_date=result.flight_date,
+				flight_status=result.flight_status,
+				flight_iata=result.flight.iata,
+				airline_iata=result.airline.iata,
+			)
+		)
+	return flights
+
+
+def load_results_dataset_json(path: Path) -> List[FlightResult]:
+	return parse_results_dataset_json(load_results_json(path))
+
+
+def load_flights_dataset_json(path: Path) -> List[Flight]:
+	return normalize_results_to_flights(load_results_dataset_json(path))
+
+
 # =======================================
 # =========== LOCAL TESTING =============
 # =======================================
@@ -188,3 +258,7 @@ if __name__ == "__main__":
 	print(results_data)
 	parsed_results = parse_results_json(results_data)
 	print(parsed_results)
+	parsed_dataset = load_results_dataset_json(results_path)
+	print(parsed_dataset)
+	normalized_flights = load_flights_dataset_json(results_path)
+	print(normalized_flights)
