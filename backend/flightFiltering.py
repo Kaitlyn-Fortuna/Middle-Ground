@@ -4,7 +4,6 @@ from __future__ import annotations
 # ======== IMPORTS ===========
 # ============================
 
-from dataclasses import dataclass, field
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
@@ -26,25 +25,10 @@ from airportFiltering import (
     overall_rank,
     run_all_ranks,
 )
-
-
-# ================================
-# ======== DATA MODELS ===========
-# ================================
-
-@dataclass(frozen=True)
-class RankedFlight:
-    flight: Flight
-    destination_airport_rank: Optional[RankedAirport]
-    scores: Optional[Dict[str, float]]
-    percent_match: Optional[float]
-
-
-@dataclass(frozen=True)
-class FlightRankResult:
-    ranked: List[RankedFlight]
-    active_score_keys: List[str]
-    diagnostics: Dict[str, object] = field(default_factory=dict)
+from models import (
+    FlightRankResult, 
+    RankedFlight
+)
 
 
 # ====================================

@@ -4,7 +4,6 @@ from __future__ import annotations
 # ======== IMPORTS ===========
 # ============================
 
-from dataclasses import dataclass, field
 import math
 import sqlite3
 import json
@@ -16,33 +15,11 @@ from parseFilters import (
     load_filters_json, 
     parse_filters_json
 )
-
-
-# ================================
-# ======== DATA MODELS ===========
-# ================================
-
-@dataclass(frozen=True)
-class Airport:
-    iata_code: str
-    name: str
-    iso_country: str
-    iso_region: str
-    airport_type: str
-    latitude: float
-    longitude: float
-
-@dataclass(frozen=True)
-class RankedAirport:
-    airport: Airport
-    scores: Optional[Dict[str, float]]
-    percent_match: Optional[float]
-
-@dataclass(frozen=True)
-class RankResult:
-    ranked: List[RankedAirport]
-    active_score_keys: List[str]
-    diagnostics: Dict[str, object] = field(default_factory=dict)
+from models import (
+    Airport, 
+    RankedAirport, 
+    RankResult
+)
 
 
 # ====================================
