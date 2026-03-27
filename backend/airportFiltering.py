@@ -11,7 +11,11 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Callable
 
-from parseFilters import SearchFilters, load_filters_json, parse_filters_json
+from parseFilters import (
+    SearchFilters, 
+    load_filters_json, 
+    parse_filters_json
+)
 
 
 # ================================
