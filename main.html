@@ -58,9 +58,17 @@
             </div>
           </div>
 
+          <div class="filter-group">
+            <h3>Max Flight Time</h3>
+            <div class="slider-row">
+              <input type="range" id="max-flight-time" min="1" max="12" step="1" value="6" />
+              <span id="max-flight-time-value">6h</span>
+            </div>
+          </div>
+
           <div class="controls controls-tight">
             <button id="buildPayloadBtn" class="btn-secondary">Build Payload</button>
-            <button id="rankBtn" class="btn-primary">Run Ranking</button>
+            <button id="rankBtn" class="btn-primary">Run Combined Ranking</button>
           </div>
         </section>
 
@@ -80,6 +88,13 @@
           </div>
         </section>
       </div>
+
+      <section class="panel">
+        <h2>Ranked Flight + Airport Results</h2>
+        <div id="resultsList" class="results-list">
+          <p class="empty-results">Run combined ranking to see routes and score breakdown.</p>
+        </div>
+      </section>
     </main>
 
     <script type="module" src="main.js"></script>

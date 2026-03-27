@@ -97,6 +97,22 @@ label {
   border-color: #bfdbfe;
 }
 
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+}
+
+#max-flight-time-value {
+  min-width: 34px;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
 .controls {
   display: flex;
   gap: 12px;
@@ -159,14 +175,72 @@ pre {
   border-radius: 10px;
   border: 1px solid #1e293b;
   margin: 0;
-  overflow-x: auto;
+  overflow: auto;
   min-height: 160px;
   line-height: 1.4;
+}
+
+#requestPayload,
+#output {
+  height: 240px;
+  max-height: 240px;
+  white-space: pre;
 }
 
 .stack {
   display: grid;
   gap: 14px;
+}
+
+.results-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.result-card {
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 12px 14px;
+}
+
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.route {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.score-total {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.meta {
+  margin-top: 6px;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.score-breakdown {
+  margin-top: 8px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+  color: #334155;
+}
+
+.empty-results {
+  margin: 0;
+  color: #64748b;
 }
 
 @media (max-width: 960px) {

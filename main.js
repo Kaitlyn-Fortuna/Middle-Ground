@@ -5,9 +5,47 @@ const healthBtn = document.getElementById("healthBtn");
 const requestPayloadEl = document.getElementById("requestPayload");
 const buildPayloadBtn = document.getElementById("buildPayloadBtn");
 const rankBtn = document.getElementById("rankBtn");
+const maxFlightTimeEl = document.getElementById("max-flight-time");
+const maxFlightTimeValueEl = document.getElementById("max-flight-time-value");
+const resultsListEl = document.getElementById("resultsList");
 
 function setOutput(data) {
   outputEl.textContent = JSON.stringify(data, null, 2);
+}
+
+function toPercent(value) {
+  if (typeof value !== "number") return "N/A";
+  return `${Math.round(value * 100)}%`;
+}
+
+function renderCombinedResults(data) {
+  const rows = Array.isArray(data?.results) ? data.results : [];
+  if (rows.length === 0) {
+    resultsListEl.innerHTML = '<p class="empty-results">No results found for this filter set.</p>';
+    return;
+  }
+
+  resultsListEl.innerHTML = rows
+    .map(
+      (row) => `
+        <article class="result-card">
+          <div class="result-head">
+            <div class="route">#${row.rank} ${row.departure_iata} → ${row.arrival_iata}</div>
+            <div class="score-total">Total: ${toPercent(row.percent_match_total)}</div>
+          </div>
+          <div class="meta">
+            Flight ${row.flight_iata || "N/A"} • Airline ${row.airline_iata || "N/A"} •
+            Status ${row.flight_status || "N/A"} • Flight Time ${row.flight_time_hours ?? "N/A"}h
+          </div>
+          <div class="score-breakdown">
+            <span>Airport: <strong>${toPercent(row.percent_match_airport)}</strong></span>
+            <span>Flight: <strong>${toPercent(row.percent_match_flight)}</strong></span>
+            <span>Total: <strong>${toPercent(row.percent_match_total)}</strong></span>
+          </div>
+        </article>
+      `
+    )
+    .join("");
 }
 
 function getCheckedValues(pairs) {
@@ -41,6 +79,7 @@ function buildFiltersPayload() {
       ["geography-urban", "urban"],
       ["geography-mountainous", "mountainous"],
     ]),
+    max_flight_time: Number(maxFlightTimeEl.value),
   };
 }
 
@@ -73,12 +112,17 @@ buildPayloadBtn.addEventListener("click", () => {
   updatePayloadPreview();
 });
 
+maxFlightTimeEl.addEventListener("input", () => {
+  maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+  updatePayloadPreview();
+});
+
 rankBtn.addEventListener("click", async () => {
   const payload = buildFiltersPayload();
   updatePayloadPreview();
 
   try {
-    const data = await callApi("/rank?limit=25", {
+    const data = await callApi("/rank-combined?limit=25", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,9 +130,12 @@ rankBtn.addEventListener("click", async () => {
       body: JSON.stringify(payload),
     });
     setOutput(data);
+    renderCombinedResults(data);
   } catch (error) {
     setOutput({ error: error.message });
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${error.message}</p>`;
   }
 });
 
+maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
 updatePayloadPreview();

@@ -77,6 +77,20 @@ def build_destination_rank_map(ranked_airports: List[RankedAirport]) -> Dict[str
     return rank_map
 
 
+def compute_flight_duration_hours(flight: Flight) -> Optional[float]:
+    if flight.raw_result.departure.scheduled is None or flight.raw_result.arrival.scheduled is None:
+        return None
+
+    try:
+        departure_time = datetime.fromisoformat(flight.raw_result.departure.scheduled)
+        arrival_time = datetime.fromisoformat(flight.raw_result.arrival.scheduled)
+    except ValueError:
+        return None
+
+    duration_hours = (arrival_time - departure_time).total_seconds() / 3600.0
+    return duration_hours if duration_hours >= 0 else None
+
+
 # ======================================
 # ======== RANKING FUNCTIONS ===========
 # ======================================
@@ -89,22 +103,15 @@ def rank_logistic_flight_time(flights: List[RankedFlight], filters: SearchFilter
 
     for ranked_flight in flights:
         flight_time_score = 0.0
-        if ranked_flight.flight.raw_result.departure.scheduled and ranked_flight.flight.raw_result.arrival.scheduled:
+        flight_duration_hours = compute_flight_duration_hours(ranked_flight.flight)
 
-            try:
-                departure_time = datetime.fromisoformat(ranked_flight.flight.raw_result.departure.scheduled)
-                arrival_time = datetime.fromisoformat(ranked_flight.flight.raw_result.arrival.scheduled)
-                flight_duration_hours = (arrival_time - departure_time).total_seconds() / 3600.0
-
-                if flight_duration_hours <= filters.max_flight_time:
-                    flight_time_score = 1.0
-                else:
-                    decay_rate = 0.5
-                    flight_time_score = 1 / (1 + ((flight_duration_hours - filters.max_flight_time) * decay_rate))
-                    flight_time_score = max(flight_time_score, 0.0)
-
-            except Exception:
-                flight_time_score = 0.0
+        if flight_duration_hours is not None:
+            if flight_duration_hours <= filters.max_flight_time:
+                flight_time_score = 1.0
+            else:
+                decay_rate = 0.5
+                flight_time_score = 1 / (1 + ((flight_duration_hours - filters.max_flight_time) * decay_rate))
+                flight_time_score = max(flight_time_score, 0.0)
 
         ranked.append(_append_flight_score(ranked_flight, "flight_time", flight_time_score))
 
