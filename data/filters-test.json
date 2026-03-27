@@ -3,7 +3,7 @@
     "Conditions": ["Sunny", "Wet", "Low Humidity"],
     "Geography": ["Coastal", "Beach", "Urban", "Mountainous"],
     "maxConnections": 3,
-    "maxFlightTime": 17,
+    "maxFlightTime": 7,
     "budgetCap": 3001,
     "preferNonStop": false,
     "domesticOnly": true,

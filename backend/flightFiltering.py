@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set
+from datetime import datetime
 
 from parseResults import (
     FlightResult,
@@ -125,10 +126,54 @@ def build_destination_rank_map(ranked_airports: List[RankedAirport]) -> Dict[str
 # ======== RANKING FUNCTIONS ===========
 # ======================================
 
+def rank_logistic_flight_time(flights: List[RankedFlight], filters: SearchFilters) -> List[RankedFlight]:
+    ranked: List[RankedFlight] = []
+
+    if filters.max_flight_time is None:
+        return flights
+
+    for ranked_flight in flights:
+        flight_time_score = 0.0
+        if ranked_flight.flight.raw_result.departure.scheduled and ranked_flight.flight.raw_result.arrival.scheduled:
+
+            try:
+                departure_time = datetime.fromisoformat(ranked_flight.flight.raw_result.departure.scheduled)
+                arrival_time = datetime.fromisoformat(ranked_flight.flight.raw_result.arrival.scheduled)
+                flight_duration_hours = (arrival_time - departure_time).total_seconds() / 3600.0
+
+                if flight_duration_hours <= filters.max_flight_time:
+                    flight_time_score = 1.0
+                else:
+                    decay_rate = 0.5
+                    flight_time_score = 1 / (1 + ((flight_duration_hours - filters.max_flight_time) * decay_rate))
+                    flight_time_score = max(flight_time_score, 0.0)
+
+            except Exception:
+                flight_time_score = 0.0
+
+        ranked.append(_append_flight_score(ranked_flight, "flight_time", flight_time_score))
+
+    return ranked
 
 
 # =======================================
 # =========== LOCAL TESTING =============
 # =======================================
 
+if __name__ == "__main__":
+    filters_path = Path("data/filters-test.json")
+    filters_data = load_filters_json(filters_path)
+    parsed_filters = parse_filters_json(filters_data)
 
+    results_path = Path("data/results-test.json")
+    results_data = load_results_json(results_path)
+    parsed_results = parse_results_json(results_data)
+
+    flights = normalize_results_to_flights([parsed_results])
+
+    ranked_flights = initialize_ranked_flights(flights)
+    ranked_flights = rank_logistic_flight_time(ranked_flights, parsed_filters)
+
+    print(f"Ranked {len(ranked_flights)} flights by flight time:")
+    for ranked in ranked_flights[:25]:  # Print the first 25 ranked flights
+        print(ranked.flight.flight_iata, ranked.flight.departure_iata, ranked.flight.arrival_iata, ranked.scores)
