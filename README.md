@@ -1,23 +1,16 @@
 # MiddleGround
 
-MiddleGround is a destination ranking prototype with:
-
 - Frontend (`main.html`, `main.js`, `main.css`) for selecting filters and viewing ranked routes
 - Flask backend API (`backend/app.py`) for airport ranking and combined airport+flight ranking
 - SQLite airport dataset (`data/airport_data.db`)
-- Synthetic flight dataset for testing (`data/results-text.json`)
 
 ## Architecture Overview
-
-The app currently uses a two-stage ranking flow:
 
 1. Rank airports with **weather / conditions / geography** preferences.
 2. Rank flights with **flight-time preference**.
 3. Combine scores into a final route score:
 
 `total_score = (airport_score + flight_score) / 2`
-
-This allows airport-level preferences and flight-level logistics to contribute equally.
 
 ## Ports and CORS
 
@@ -72,8 +65,6 @@ Empty arrays are normalized to `None`, so unselected categories do not add zero-
 ## Scoring Model
 
 ### Airport score (0.0 to 1.0)
-
-Airport scoring is computed from selected airport-side dimensions only:
 
 - temperature bands
 - sun
@@ -196,15 +187,3 @@ Example (trimmed):
 - `data/airport_data.db`: airport features used for airport ranking.
 - `data/results-text.json`: synthetic domestic flight dataset for combined ranking tests.
 - `data/results-test.json`: smaller fallback dataset.
-
-`/api/rank-combined` attempts to load `results-text.json`, then falls back to `results-test.json` if needed.
-
-## Frontend Notes
-
-- The UI includes a max-flight-time slider tied to `max_flight_time`.
-- Request and raw API-response JSON panels are fixed-height with internal scrolling.
-- Ranked route cards show:
-  - departure and arrival airports
-  - airline / flight code / status
-  - flight time
-  - airport, flight, and total percent-match breakdown
