@@ -185,7 +185,6 @@ if __name__ == "__main__":
 
     final_rank = overall_flight_rank(ranked_flights, parsed_filters)
     print(f"Final overall rank of {len(final_rank.ranked)} flights:")
-    for ranked in final_rank.ranked[:25]:  # Print the first 25 ranked flights
-        print(ranked.flight.flight_iata, ranked.flight.departure_iata, ranked.flight.arrival_iata, ranked.percent_match)
-
-    print(json.dumps(format_flight_rank_results(final_rank, limit=25), indent=2))
+    for idx, ranked in enumerate(final_rank.ranked[:25], start=1):  # Print the first 25 ranked airports
+        percent_text = f"{ranked.percent_match:.3f}" if ranked.percent_match is not None else "N/A"
+        print(f"{idx} | {ranked.flight.flight_iata} | {ranked.flight.departure_iata} | {ranked.flight.arrival_iata} | {percent_text}")

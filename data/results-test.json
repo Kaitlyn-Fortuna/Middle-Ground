@@ -1,46 +1,2602 @@
-{
-  "flight_date": "2026-03-20",
-  "flight_status": "scheduled",
-  "departure": {
-    "airport": "Istanbul Airport",
-    "timezone": "Europe/Istanbul",
-    "iata": "IST",
-    "icao": "LTFM",
-    "terminal": null,
-    "gate": null,
-    "delay": null,
-    "scheduled": "2026-03-20T01:05:00+00:00",
-    "estimated": "2026-03-20T01:05:00+00:00",
-    "actual": null,
-    "estimated_runway": null,
-    "actual_runway": null
+[
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Portland International Airport",
+      "timezone": "America/New_York",
+      "iata": "PDX",
+      "icao": "KPDX",
+      "terminal": "1",
+      "gate": "B9",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-07T17:55:00+00:00",
+      "estimated": "2026-04-07T18:25:00+00:00",
+      "actual": "2026-04-07T18:25:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "John Glenn Columbus International Airport",
+      "timezone": "America/New_York",
+      "iata": "CMH",
+      "icao": "KCMH",
+      "terminal": "3",
+      "gate": "C5",
+      "baggage": "7",
+      "delay": 45,
+      "scheduled": "2026-04-07T21:00:00+00:00",
+      "estimated": "2026-04-07T21:45:00+00:00",
+      "actual": "2026-04-07T21:45:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "563",
+      "iata": "DL563",
+      "icao": "DAL563",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N33315",
+      "iata": "A321",
+      "icao": "B738",
+      "icao24": "fa2adc"
+    },
+    "live": null
   },
-  "arrival": {
-    "airport": "Alama Iqbal International",
-    "timezone": "Asia/Karachi",
-    "iata": "LHE",
-    "icao": "OPLA",
-    "terminal": null,
-    "gate": null,
-    "baggage": null,
-    "scheduled": "2026-03-20T08:40:00+00:00",
-    "delay": null,
-    "estimated": null,
-    "actual": null,
-    "estimated_runway": null,
-    "actual_runway": null
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Cleveland Hopkins International Airport",
+      "timezone": "America/New_York",
+      "iata": "CLE",
+      "icao": "KCLE",
+      "terminal": "A",
+      "gate": "A1",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-08T00:25:00+00:00",
+      "estimated": "2026-04-08T00:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Salt Lake City International Airport",
+      "timezone": "America/New_York",
+      "iata": "SLC",
+      "icao": "KSLC",
+      "terminal": "A",
+      "gate": "A6",
+      "baggage": "7",
+      "delay": null,
+      "scheduled": "2026-04-08T02:30:00+00:00",
+      "estimated": "2026-04-08T02:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "United Airlines",
+      "iata": "UA",
+      "icao": "UAL"
+    },
+    "flight": {
+      "number": "2728",
+      "iata": "UA2728",
+      "icao": "UAL2728",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N57644",
+      "iata": "B737",
+      "icao": "A320",
+      "icao24": "5d00fd"
+    },
+    "live": null
   },
-  "airline": {
-    "name": "Turkish Airlines",
-    "iata": "TK",
-    "icao": "THY"
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Miami International Airport",
+      "timezone": "America/New_York",
+      "iata": "MIA",
+      "icao": "KMIA",
+      "terminal": "1",
+      "gate": "D7",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-02T01:30:00+00:00",
+      "estimated": "2026-04-02T01:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "San Francisco International Airport",
+      "timezone": "America/New_York",
+      "iata": "SFO",
+      "icao": "KSFO",
+      "terminal": "4",
+      "gate": "A2",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-02T06:35:00+00:00",
+      "estimated": "2026-04-02T06:45:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "4195",
+      "iata": "WN4195",
+      "icao": "SWA4195",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N76241",
+      "iata": "A320",
+      "icao": "A320",
+      "icao24": "91a952"
+    },
+    "live": null
   },
-  "flight": {
-    "number": "744",
-    "iata": "TK744",
-    "icao": "THY744",
-    "codeshared": null
+  {
+    "flight_date": "2026-04-10",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Daniel K Inouye International Airport",
+      "timezone": "America/New_York",
+      "iata": "HNL",
+      "icao": "KHNL",
+      "terminal": null,
+      "gate": "B2",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-10T01:10:00+00:00",
+      "estimated": "2026-04-10T01:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Logan International Airport",
+      "timezone": "America/New_York",
+      "iata": "BOS",
+      "icao": "KBOS",
+      "terminal": "A",
+      "gate": "C5",
+      "baggage": "6",
+      "delay": 10,
+      "scheduled": "2026-04-10T03:05:00+00:00",
+      "estimated": "2026-04-10T03:15:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Alaska Airlines",
+      "iata": "AS",
+      "icao": "ASA"
+    },
+    "flight": {
+      "number": "638",
+      "iata": "AS638",
+      "icao": "ASA638",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N12547",
+      "iata": "E175",
+      "icao": "E75L",
+      "icao24": "e413f7"
+    },
+    "live": null
   },
-  "aircraft": null,
-  "live": null
-}
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Richmond International Airport",
+      "timezone": "America/New_York",
+      "iata": "RIC",
+      "icao": "KRIC",
+      "terminal": "1",
+      "gate": null,
+      "baggage": null,
+      "delay": 5,
+      "scheduled": "2026-04-07T00:35:00+00:00",
+      "estimated": "2026-04-07T00:40:00+00:00",
+      "actual": "2026-04-07T00:40:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Will Rogers World Airport",
+      "timezone": "America/New_York",
+      "iata": "OKC",
+      "icao": "KOKC",
+      "terminal": "3",
+      "gate": null,
+      "baggage": "5",
+      "delay": 10,
+      "scheduled": "2026-04-07T05:10:00+00:00",
+      "estimated": "2026-04-07T05:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "JetBlue Airways",
+      "iata": "B6",
+      "icao": "JBU"
+    },
+    "flight": {
+      "number": "324",
+      "iata": "B6324",
+      "icao": "JBU324",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N68213",
+      "iata": "E175",
+      "icao": "E75L",
+      "icao24": "073977"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Albuquerque International Sunport",
+      "timezone": "America/New_York",
+      "iata": "ABQ",
+      "icao": "KABQ",
+      "terminal": "3",
+      "gate": "D7",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-07T07:50:00+00:00",
+      "estimated": "2026-04-07T07:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Portland International Jetport",
+      "timezone": "America/New_York",
+      "iata": "PWM",
+      "icao": "KPWM",
+      "terminal": "4",
+      "gate": "A2",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-07T12:20:00+00:00",
+      "estimated": "2026-04-07T12:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "2115",
+      "iata": "WN2115",
+      "icao": "SWA2115",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N55762",
+      "iata": "A321",
+      "icao": "A321",
+      "icao24": "25a838"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-11",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Nashville International Airport",
+      "timezone": "America/New_York",
+      "iata": "BNA",
+      "icao": "KBNA",
+      "terminal": "B",
+      "gate": "A5",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-11T02:05:00+00:00",
+      "estimated": "2026-04-11T02:15:00+00:00",
+      "actual": "2026-04-11T02:15:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Portland International Airport",
+      "timezone": "America/New_York",
+      "iata": "PDX",
+      "icao": "KPDX",
+      "terminal": "3",
+      "gate": "C5",
+      "baggage": "10",
+      "delay": 10,
+      "scheduled": "2026-04-11T07:00:00+00:00",
+      "estimated": "2026-04-11T07:10:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "1528",
+      "iata": "F91528",
+      "icao": "FFT1528",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N84744",
+      "iata": "B737",
+      "icao": "B737",
+      "icao24": "7fb06d"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Charlotte Douglas International Airport",
+      "timezone": "America/New_York",
+      "iata": "CLT",
+      "icao": "KCLT",
+      "terminal": "C",
+      "gate": "C4",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-08T05:15:00+00:00",
+      "estimated": "2026-04-08T05:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Salt Lake City International Airport",
+      "timezone": "America/New_York",
+      "iata": "SLC",
+      "icao": "KSLC",
+      "terminal": "A",
+      "gate": "B1",
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-08T08:20:00+00:00",
+      "estimated": "2026-04-08T09:05:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "3314",
+      "iata": "F93314",
+      "icao": "FFT3314",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N23964",
+      "iata": "A321",
+      "icao": "E75L",
+      "icao24": "f78850"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Memphis International Airport",
+      "timezone": "America/New_York",
+      "iata": "MEM",
+      "icao": "KMEM",
+      "terminal": "3",
+      "gate": "B2",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-08T20:05:00+00:00",
+      "estimated": "2026-04-08T20:05:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Theodore Francis Green State Airport",
+      "timezone": "America/New_York",
+      "iata": "PVD",
+      "icao": "KPVD",
+      "terminal": "3",
+      "gate": "D3",
+      "baggage": "7",
+      "delay": 30,
+      "scheduled": "2026-04-09T01:55:00+00:00",
+      "estimated": "2026-04-09T02:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "2365",
+      "iata": "NK2365",
+      "icao": "NKS2365",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N35179",
+      "iata": "B737",
+      "icao": "A321",
+      "icao24": "f67f5a"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-05",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "San Francisco Bay Oakland International Airport",
+      "timezone": "America/New_York",
+      "iata": "OAK",
+      "icao": "KOAK",
+      "terminal": "C",
+      "gate": "B9",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-05T11:35:00+00:00",
+      "estimated": "2026-04-05T11:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Joint Base Andrews",
+      "timezone": "America/New_York",
+      "iata": "ADW",
+      "icao": "KADW",
+      "terminal": "A",
+      "gate": "B1",
+      "baggage": "12",
+      "delay": null,
+      "scheduled": "2026-04-05T18:10:00+00:00",
+      "estimated": "2026-04-05T18:10:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "American Airlines",
+      "iata": "AA",
+      "icao": "AAL"
+    },
+    "flight": {
+      "number": "913",
+      "iata": "AA913",
+      "icao": "AAL913",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N53644",
+      "iata": "B737",
+      "icao": "E75L",
+      "icao24": "581e85"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-01",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Philadelphia International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHL",
+      "icao": "KPHL",
+      "terminal": "4",
+      "gate": "B2",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-01T16:15:00+00:00",
+      "estimated": "2026-04-01T16:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Indianapolis International Airport",
+      "timezone": "America/New_York",
+      "iata": "IND",
+      "icao": "KIND",
+      "terminal": "B",
+      "gate": "A6",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-01T23:00:00+00:00",
+      "estimated": "2026-04-01T23:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "1026",
+      "iata": "WN1026",
+      "icao": "SWA1026",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N18305",
+      "iata": "B738",
+      "icao": "A320",
+      "icao24": "d8b386"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-05",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Dallas Fort Worth International Airport",
+      "timezone": "America/New_York",
+      "iata": "DFW",
+      "icao": "KDFW",
+      "terminal": "4",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-05T18:25:00+00:00",
+      "estimated": "2026-04-05T18:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Portland International Airport",
+      "timezone": "America/New_York",
+      "iata": "PDX",
+      "icao": "KPDX",
+      "terminal": "B",
+      "gate": "B1",
+      "baggage": "12",
+      "delay": null,
+      "scheduled": "2026-04-05T21:30:00+00:00",
+      "estimated": "2026-04-05T21:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "1048",
+      "iata": "DL1048",
+      "icao": "DAL1048",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N25882",
+      "iata": "A320",
+      "icao": "E75L",
+      "icao24": "6d6e17"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-06",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Phoenix Sky Harbor International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHX",
+      "icao": "KPHX",
+      "terminal": "B",
+      "gate": null,
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-06T01:00:00+00:00",
+      "estimated": "2026-04-06T01:30:00+00:00",
+      "actual": "2026-04-06T01:30:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Syracuse Hancock International Airport",
+      "timezone": "America/New_York",
+      "iata": "SYR",
+      "icao": "KSYR",
+      "terminal": "B",
+      "gate": "C5",
+      "baggage": "5",
+      "delay": null,
+      "scheduled": "2026-04-06T07:40:00+00:00",
+      "estimated": "2026-04-06T07:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "4365",
+      "iata": "DL4365",
+      "icao": "DAL4365",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N67840",
+      "iata": "A320",
+      "icao": "A320",
+      "icao24": "18fcc1"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-09",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Reno Tahoe International Airport",
+      "timezone": "America/New_York",
+      "iata": "RNO",
+      "icao": "KRNO",
+      "terminal": "B",
+      "gate": null,
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-09T19:20:00+00:00",
+      "estimated": "2026-04-09T20:05:00+00:00",
+      "actual": "2026-04-09T20:05:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "San Francisco Bay Oakland International Airport",
+      "timezone": "America/New_York",
+      "iata": "OAK",
+      "icao": "KOAK",
+      "terminal": null,
+      "gate": "A2",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-10T00:00:00+00:00",
+      "estimated": "2026-04-10T00:00:00+00:00",
+      "actual": "2026-04-10T00:00:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "American Airlines",
+      "iata": "AA",
+      "icao": "AAL"
+    },
+    "flight": {
+      "number": "1912",
+      "iata": "AA1912",
+      "icao": "AAL1912",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N10923",
+      "iata": "A321",
+      "icao": "B737",
+      "icao24": "a3dd41"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Austin Bergstrom International Airport",
+      "timezone": "America/New_York",
+      "iata": "AUS",
+      "icao": "KAUS",
+      "terminal": "4",
+      "gate": null,
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-02T00:50:00+00:00",
+      "estimated": "2026-04-02T00:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "General Mitchell International Airport",
+      "timezone": "America/New_York",
+      "iata": "MKE",
+      "icao": "KMKE",
+      "terminal": "3",
+      "gate": "B8",
+      "baggage": "5",
+      "delay": 10,
+      "scheduled": "2026-04-02T07:30:00+00:00",
+      "estimated": "2026-04-02T07:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "4891",
+      "iata": "NK4891",
+      "icao": "NKS4891",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N39254",
+      "iata": "A320",
+      "icao": "A320",
+      "icao24": "0cbd5f"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-10",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Nashville International Airport",
+      "timezone": "America/New_York",
+      "iata": "BNA",
+      "icao": "KBNA",
+      "terminal": "4",
+      "gate": "C4",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-10T04:30:00+00:00",
+      "estimated": "2026-04-10T04:50:00+00:00",
+      "actual": "2026-04-10T04:50:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Cleveland Hopkins International Airport",
+      "timezone": "America/New_York",
+      "iata": "CLE",
+      "icao": "KCLE",
+      "terminal": "C",
+      "gate": "B8",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-10T11:00:00+00:00",
+      "estimated": "2026-04-10T11:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "1588",
+      "iata": "DL1588",
+      "icao": "DAL1588",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N49450",
+      "iata": "B737",
+      "icao": "B738",
+      "icao24": "a06f56"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-09",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Cincinnati Northern Kentucky International Airport",
+      "timezone": "America/New_York",
+      "iata": "CVG",
+      "icao": "KCVG",
+      "terminal": "A",
+      "gate": "C4",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-09T09:00:00+00:00",
+      "estimated": "2026-04-09T09:00:00+00:00",
+      "actual": "2026-04-09T09:00:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Harry Reid International Airport",
+      "timezone": "America/New_York",
+      "iata": "LAS",
+      "icao": "KLAS",
+      "terminal": "B",
+      "gate": "B8",
+      "baggage": "12",
+      "delay": 20,
+      "scheduled": "2026-04-09T14:30:00+00:00",
+      "estimated": "2026-04-09T14:50:00+00:00",
+      "actual": "2026-04-09T14:50:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "3222",
+      "iata": "DL3222",
+      "icao": "DAL3222",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N37425",
+      "iata": "B738",
+      "icao": "B738",
+      "icao24": "61decd"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "San Francisco Bay Oakland International Airport",
+      "timezone": "America/New_York",
+      "iata": "OAK",
+      "icao": "KOAK",
+      "terminal": null,
+      "gate": "B9",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-02T07:25:00+00:00",
+      "estimated": "2026-04-02T07:45:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Norman Y. Mineta San Jose International Airport",
+      "timezone": "America/New_York",
+      "iata": "SJC",
+      "icao": "KSJC",
+      "terminal": "1",
+      "gate": null,
+      "baggage": null,
+      "delay": 5,
+      "scheduled": "2026-04-02T11:20:00+00:00",
+      "estimated": "2026-04-02T11:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "4192",
+      "iata": "NK4192",
+      "icao": "NKS4192",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N46657",
+      "iata": "E175",
+      "icao": "B737",
+      "icao24": "77617c"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-09",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Denver International Airport",
+      "timezone": "America/New_York",
+      "iata": "DEN",
+      "icao": "KDEN",
+      "terminal": null,
+      "gate": "A1",
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-09T01:25:00+00:00",
+      "estimated": "2026-04-09T02:10:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Will Rogers World Airport",
+      "timezone": "America/New_York",
+      "iata": "OKC",
+      "icao": "KOKC",
+      "terminal": "C",
+      "gate": "A2",
+      "baggage": "5",
+      "delay": 20,
+      "scheduled": "2026-04-09T06:15:00+00:00",
+      "estimated": "2026-04-09T06:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "American Airlines",
+      "iata": "AA",
+      "icao": "AAL"
+    },
+    "flight": {
+      "number": "2340",
+      "iata": "AA2340",
+      "icao": "AAL2340",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N87309",
+      "iata": "A321",
+      "icao": "B738",
+      "icao24": "2cca1b"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-06",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Eppley Airfield",
+      "timezone": "America/New_York",
+      "iata": "OMA",
+      "icao": "KOMA",
+      "terminal": "B",
+      "gate": "D7",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-06T16:10:00+00:00",
+      "estimated": "2026-04-06T16:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Austin Bergstrom International Airport",
+      "timezone": "America/New_York",
+      "iata": "AUS",
+      "icao": "KAUS",
+      "terminal": "1",
+      "gate": "B1",
+      "baggage": "6",
+      "delay": null,
+      "scheduled": "2026-04-06T18:40:00+00:00",
+      "estimated": "2026-04-06T18:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "2966",
+      "iata": "DL2966",
+      "icao": "DAL2966",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N16521",
+      "iata": "B738",
+      "icao": "E75L",
+      "icao24": "7065b8"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Los Angeles International Airport",
+      "timezone": "America/New_York",
+      "iata": "LAX",
+      "icao": "KLAX",
+      "terminal": "B",
+      "gate": "D7",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-02T14:20:00+00:00",
+      "estimated": "2026-04-02T14:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Kansas City International Airport",
+      "timezone": "America/New_York",
+      "iata": "MCI",
+      "icao": "KMCI",
+      "terminal": "1",
+      "gate": "A2",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-02T15:30:00+00:00",
+      "estimated": "2026-04-02T15:45:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "3916",
+      "iata": "F93916",
+      "icao": "FFT3916",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N78103",
+      "iata": "E175",
+      "icao": "B738",
+      "icao24": "1326fe"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Palm Beach International Airport",
+      "timezone": "America/New_York",
+      "iata": "PBI",
+      "icao": "KPBI",
+      "terminal": "2",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-08T17:40:00+00:00",
+      "estimated": "2026-04-08T17:55:00+00:00",
+      "actual": "2026-04-08T17:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Indianapolis International Airport",
+      "timezone": "America/New_York",
+      "iata": "IND",
+      "icao": "KIND",
+      "terminal": "3",
+      "gate": null,
+      "baggage": "7",
+      "delay": null,
+      "scheduled": "2026-04-09T00:05:00+00:00",
+      "estimated": "2026-04-09T00:05:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Alaska Airlines",
+      "iata": "AS",
+      "icao": "ASA"
+    },
+    "flight": {
+      "number": "3887",
+      "iata": "AS3887",
+      "icao": "ASA3887",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N33693",
+      "iata": "A320",
+      "icao": "B737",
+      "icao24": "b00ead"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-09",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Phoenix Sky Harbor International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHX",
+      "icao": "KPHX",
+      "terminal": "A",
+      "gate": "B9",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-09T13:20:00+00:00",
+      "estimated": "2026-04-09T13:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Pittsburgh International Airport",
+      "timezone": "America/New_York",
+      "iata": "PIT",
+      "icao": "KPIT",
+      "terminal": "C",
+      "gate": "A2",
+      "baggage": "10",
+      "delay": 5,
+      "scheduled": "2026-04-09T18:35:00+00:00",
+      "estimated": "2026-04-09T18:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "1633",
+      "iata": "WN1633",
+      "icao": "SWA1633",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N90292",
+      "iata": "A320",
+      "icao": "A320",
+      "icao24": "589070"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Orlando Sanford International Airport",
+      "timezone": "America/New_York",
+      "iata": "SFB",
+      "icao": "KSFB",
+      "terminal": "1",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-02T01:05:00+00:00",
+      "estimated": "2026-04-02T01:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Kahului International Airport",
+      "timezone": "America/New_York",
+      "iata": "OGG",
+      "icao": "KOGG",
+      "terminal": "B",
+      "gate": "A6",
+      "baggage": "7",
+      "delay": 30,
+      "scheduled": "2026-04-02T05:40:00+00:00",
+      "estimated": "2026-04-02T06:10:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "1612",
+      "iata": "F91612",
+      "icao": "FFT1612",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N25537",
+      "iata": "A321",
+      "icao": "A320",
+      "icao24": "37d2d9"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-10",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Phoenix Sky Harbor International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHX",
+      "icao": "KPHX",
+      "terminal": "A",
+      "gate": null,
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-10T06:40:00+00:00",
+      "estimated": "2026-04-10T06:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Tampa International Airport",
+      "timezone": "America/New_York",
+      "iata": "TPA",
+      "icao": "KTPA",
+      "terminal": "B",
+      "gate": null,
+      "baggage": "6",
+      "delay": 5,
+      "scheduled": "2026-04-10T10:55:00+00:00",
+      "estimated": "2026-04-10T11:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Alaska Airlines",
+      "iata": "AS",
+      "icao": "ASA"
+    },
+    "flight": {
+      "number": "182",
+      "iata": "AS182",
+      "icao": "ASA182",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N83404",
+      "iata": "B737",
+      "icao": "B738",
+      "icao24": "6b1987"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Pittsburgh International Airport",
+      "timezone": "America/New_York",
+      "iata": "PIT",
+      "icao": "KPIT",
+      "terminal": "C",
+      "gate": null,
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-02T18:35:00+00:00",
+      "estimated": "2026-04-02T18:35:00+00:00",
+      "actual": "2026-04-02T18:35:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Sacramento International Airport",
+      "timezone": "America/New_York",
+      "iata": "SMF",
+      "icao": "KSMF",
+      "terminal": "4",
+      "gate": "A2",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-02T22:05:00+00:00",
+      "estimated": "2026-04-02T22:05:00+00:00",
+      "actual": "2026-04-02T22:05:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "4278",
+      "iata": "F94278",
+      "icao": "FFT4278",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N61085",
+      "iata": "B738",
+      "icao": "B738",
+      "icao24": "b42b0b"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Chicago Midway International Airport",
+      "timezone": "America/New_York",
+      "iata": "MDW",
+      "icao": "KMDW",
+      "terminal": "A",
+      "gate": "C4",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-04T13:10:00+00:00",
+      "estimated": "2026-04-04T13:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Albuquerque International Sunport",
+      "timezone": "America/New_York",
+      "iata": "ABQ",
+      "icao": "KABQ",
+      "terminal": "4",
+      "gate": "A2",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-04T17:55:00+00:00",
+      "estimated": "2026-04-04T18:15:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "1074",
+      "iata": "DL1074",
+      "icao": "DAL1074",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N68678",
+      "iata": "E175",
+      "icao": "A320",
+      "icao24": "5608df"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-03",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Memphis International Airport",
+      "timezone": "America/New_York",
+      "iata": "MEM",
+      "icao": "KMEM",
+      "terminal": null,
+      "gate": "B9",
+      "baggage": null,
+      "delay": 5,
+      "scheduled": "2026-04-03T17:25:00+00:00",
+      "estimated": "2026-04-03T17:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Hartsfield Jackson Atlanta International Airport",
+      "timezone": "America/New_York",
+      "iata": "ATL",
+      "icao": "KATL",
+      "terminal": "A",
+      "gate": "C5",
+      "baggage": "10",
+      "delay": 30,
+      "scheduled": "2026-04-03T21:55:00+00:00",
+      "estimated": "2026-04-03T22:25:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "3357",
+      "iata": "F93357",
+      "icao": "FFT3357",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N12264",
+      "iata": "E175",
+      "icao": "A320",
+      "icao24": "c7b216"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Orlando Sanford International Airport",
+      "timezone": "America/New_York",
+      "iata": "SFB",
+      "icao": "KSFB",
+      "terminal": "4",
+      "gate": "B2",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-04T00:15:00+00:00",
+      "estimated": "2026-04-04T00:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Joint Base Andrews",
+      "timezone": "America/New_York",
+      "iata": "ADW",
+      "icao": "KADW",
+      "terminal": "A",
+      "gate": "B8",
+      "baggage": "10",
+      "delay": 20,
+      "scheduled": "2026-04-04T04:00:00+00:00",
+      "estimated": "2026-04-04T04:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "276",
+      "iata": "WN276",
+      "icao": "SWA276",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N22757",
+      "iata": "E175",
+      "icao": "A320",
+      "icao24": "564c01"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "John F Kennedy International Airport",
+      "timezone": "America/New_York",
+      "iata": "JFK",
+      "icao": "KJFK",
+      "terminal": "1",
+      "gate": "B9",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-04T13:00:00+00:00",
+      "estimated": "2026-04-04T13:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Phoenix Sky Harbor International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHX",
+      "icao": "KPHX",
+      "terminal": null,
+      "gate": "C5",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-04T16:40:00+00:00",
+      "estimated": "2026-04-04T16:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "United Airlines",
+      "iata": "UA",
+      "icao": "UAL"
+    },
+    "flight": {
+      "number": "4053",
+      "iata": "UA4053",
+      "icao": "UAL4053",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N12282",
+      "iata": "B738",
+      "icao": "B737",
+      "icao24": "e1cf82"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-06",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "San Francisco Bay Oakland International Airport",
+      "timezone": "America/New_York",
+      "iata": "OAK",
+      "icao": "KOAK",
+      "terminal": "C",
+      "gate": "C4",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-06T08:25:00+00:00",
+      "estimated": "2026-04-06T08:45:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Syracuse Hancock International Airport",
+      "timezone": "America/New_York",
+      "iata": "SYR",
+      "icao": "KSYR",
+      "terminal": "C",
+      "gate": "C5",
+      "baggage": "12",
+      "delay": null,
+      "scheduled": "2026-04-06T12:20:00+00:00",
+      "estimated": "2026-04-06T12:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "1127",
+      "iata": "F91127",
+      "icao": "FFT1127",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N35516",
+      "iata": "A321",
+      "icao": "B738",
+      "icao24": "762b18"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Orlando International Airport",
+      "timezone": "America/New_York",
+      "iata": "MCO",
+      "icao": "KMCO",
+      "terminal": "A",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-04T03:35:00+00:00",
+      "estimated": "2026-04-04T03:55:00+00:00",
+      "actual": "2026-04-04T03:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Seattle\u2013Tacoma International Airport",
+      "timezone": "America/New_York",
+      "iata": "SEA",
+      "icao": "KSEA",
+      "terminal": null,
+      "gate": "B1",
+      "baggage": "5",
+      "delay": 15,
+      "scheduled": "2026-04-04T06:20:00+00:00",
+      "estimated": "2026-04-04T06:35:00+00:00",
+      "actual": "2026-04-04T06:35:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "American Airlines",
+      "iata": "AA",
+      "icao": "AAL"
+    },
+    "flight": {
+      "number": "1588",
+      "iata": "AA1588",
+      "icao": "AAL1588",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N69122",
+      "iata": "B738",
+      "icao": "E75L",
+      "icao24": "b75e7c"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Kansas City International Airport",
+      "timezone": "America/New_York",
+      "iata": "MCI",
+      "icao": "KMCI",
+      "terminal": "A",
+      "gate": "C4",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-08T01:25:00+00:00",
+      "estimated": "2026-04-08T01:55:00+00:00",
+      "actual": "2026-04-08T01:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "San Antonio International Airport",
+      "timezone": "America/New_York",
+      "iata": "SAT",
+      "icao": "KSAT",
+      "terminal": "B",
+      "gate": "C5",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-08T06:10:00+00:00",
+      "estimated": "2026-04-08T06:10:00+00:00",
+      "actual": "2026-04-08T06:10:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Alaska Airlines",
+      "iata": "AS",
+      "icao": "ASA"
+    },
+    "flight": {
+      "number": "2673",
+      "iata": "AS2673",
+      "icao": "ASA2673",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N63052",
+      "iata": "A321",
+      "icao": "A320",
+      "icao24": "9ef519"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-05",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Newark Liberty International Airport",
+      "timezone": "America/New_York",
+      "iata": "EWR",
+      "icao": "KEWR",
+      "terminal": "4",
+      "gate": "A5",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-05T04:15:00+00:00",
+      "estimated": "2026-04-05T04:30:00+00:00",
+      "actual": "2026-04-05T04:30:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Louis Armstrong New Orleans International Airport",
+      "timezone": "America/New_York",
+      "iata": "MSY",
+      "icao": "KMSY",
+      "terminal": "B",
+      "gate": "B1",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-05T11:00:00+00:00",
+      "estimated": "2026-04-05T11:00:00+00:00",
+      "actual": "2026-04-05T11:00:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "United Airlines",
+      "iata": "UA",
+      "icao": "UAL"
+    },
+    "flight": {
+      "number": "4122",
+      "iata": "UA4122",
+      "icao": "UAL4122",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N72039",
+      "iata": "B738",
+      "icao": "B738",
+      "icao24": "8ab4df"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-10",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Orlando Sanford International Airport",
+      "timezone": "America/New_York",
+      "iata": "SFB",
+      "icao": "KSFB",
+      "terminal": "3",
+      "gate": "B9",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-10T10:05:00+00:00",
+      "estimated": "2026-04-10T10:05:00+00:00",
+      "actual": "2026-04-10T10:05:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Newark Liberty International Airport",
+      "timezone": "America/New_York",
+      "iata": "EWR",
+      "icao": "KEWR",
+      "terminal": null,
+      "gate": "B8",
+      "baggage": "5",
+      "delay": null,
+      "scheduled": "2026-04-10T14:55:00+00:00",
+      "estimated": "2026-04-10T14:55:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "JetBlue Airways",
+      "iata": "B6",
+      "icao": "JBU"
+    },
+    "flight": {
+      "number": "3322",
+      "iata": "B63322",
+      "icao": "JBU3322",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N79705",
+      "iata": "B738",
+      "icao": "E75L",
+      "icao24": "e9b94f"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Syracuse Hancock International Airport",
+      "timezone": "America/New_York",
+      "iata": "SYR",
+      "icao": "KSYR",
+      "terminal": null,
+      "gate": "A1",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-07T20:50:00+00:00",
+      "estimated": "2026-04-07T21:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Newark Liberty International Airport",
+      "timezone": "America/New_York",
+      "iata": "EWR",
+      "icao": "KEWR",
+      "terminal": "B",
+      "gate": "A6",
+      "baggage": "7",
+      "delay": 15,
+      "scheduled": "2026-04-07T23:15:00+00:00",
+      "estimated": "2026-04-07T23:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "3975",
+      "iata": "NK3975",
+      "icao": "NKS3975",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N97211",
+      "iata": "A321",
+      "icao": "E75L",
+      "icao24": "02d4be"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Nashville International Airport",
+      "timezone": "America/New_York",
+      "iata": "BNA",
+      "icao": "KBNA",
+      "terminal": "C",
+      "gate": "A1",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-07T22:05:00+00:00",
+      "estimated": "2026-04-07T22:05:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Charlotte Douglas International Airport",
+      "timezone": "America/New_York",
+      "iata": "CLT",
+      "icao": "KCLT",
+      "terminal": "C",
+      "gate": "B8",
+      "baggage": "5",
+      "delay": 20,
+      "scheduled": "2026-04-07T23:45:00+00:00",
+      "estimated": "2026-04-08T00:05:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "3457",
+      "iata": "F93457",
+      "icao": "FFT3457",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N17128",
+      "iata": "A321",
+      "icao": "E75L",
+      "icao24": "f487ec"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-06",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Ontario International Airport",
+      "timezone": "America/New_York",
+      "iata": "ONT",
+      "icao": "KONT",
+      "terminal": "4",
+      "gate": "A5",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-06T23:50:00+00:00",
+      "estimated": "2026-04-07T00:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Newark Liberty International Airport",
+      "timezone": "America/New_York",
+      "iata": "EWR",
+      "icao": "KEWR",
+      "terminal": "2",
+      "gate": "A6",
+      "baggage": "12",
+      "delay": null,
+      "scheduled": "2026-04-07T03:10:00+00:00",
+      "estimated": "2026-04-07T03:10:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "243",
+      "iata": "NK243",
+      "icao": "NKS243",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N30504",
+      "iata": "E175",
+      "icao": "B738",
+      "icao24": "91b8d1"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-10",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Palm Beach International Airport",
+      "timezone": "America/New_York",
+      "iata": "PBI",
+      "icao": "KPBI",
+      "terminal": "B",
+      "gate": "A1",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-10T09:55:00+00:00",
+      "estimated": "2026-04-10T09:55:00+00:00",
+      "actual": "2026-04-10T09:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Seattle\u2013Tacoma International Airport",
+      "timezone": "America/New_York",
+      "iata": "SEA",
+      "icao": "KSEA",
+      "terminal": "A",
+      "gate": "C5",
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-10T12:50:00+00:00",
+      "estimated": "2026-04-10T13:35:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "JetBlue Airways",
+      "iata": "B6",
+      "icao": "JBU"
+    },
+    "flight": {
+      "number": "4013",
+      "iata": "B64013",
+      "icao": "JBU4013",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N11812",
+      "iata": "B737",
+      "icao": "A321",
+      "icao24": "a967ed"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Washington Dulles International Airport",
+      "timezone": "America/New_York",
+      "iata": "IAD",
+      "icao": "KIAD",
+      "terminal": "2",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-07T00:30:00+00:00",
+      "estimated": "2026-04-07T00:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Tulsa International Airport",
+      "timezone": "America/New_York",
+      "iata": "TUL",
+      "icao": "KTUL",
+      "terminal": "C",
+      "gate": "C5",
+      "baggage": null,
+      "delay": 30,
+      "scheduled": "2026-04-07T02:20:00+00:00",
+      "estimated": "2026-04-07T02:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "4498",
+      "iata": "WN4498",
+      "icao": "SWA4498",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N23700",
+      "iata": "A321",
+      "icao": "A321",
+      "icao24": "9590ed"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-06",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Denver International Airport",
+      "timezone": "America/New_York",
+      "iata": "DEN",
+      "icao": "KDEN",
+      "terminal": "2",
+      "gate": null,
+      "baggage": null,
+      "delay": 5,
+      "scheduled": "2026-04-06T17:10:00+00:00",
+      "estimated": "2026-04-06T17:15:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Norman Y. Mineta San Jose International Airport",
+      "timezone": "America/New_York",
+      "iata": "SJC",
+      "icao": "KSJC",
+      "terminal": "C",
+      "gate": "A6",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-06T19:00:00+00:00",
+      "estimated": "2026-04-06T19:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "1100",
+      "iata": "NK1100",
+      "icao": "NKS1100",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N53732",
+      "iata": "A321",
+      "icao": "A321",
+      "icao24": "98166b"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-02",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Ontario International Airport",
+      "timezone": "America/New_York",
+      "iata": "ONT",
+      "icao": "KONT",
+      "terminal": "4",
+      "gate": "C4",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-02T23:15:00+00:00",
+      "estimated": "2026-04-02T23:15:00+00:00",
+      "actual": "2026-04-02T23:15:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Phoenix Sky Harbor International Airport",
+      "timezone": "America/New_York",
+      "iata": "PHX",
+      "icao": "KPHX",
+      "terminal": "1",
+      "gate": "B1",
+      "baggage": null,
+      "delay": 10,
+      "scheduled": "2026-04-03T03:40:00+00:00",
+      "estimated": "2026-04-03T03:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "United Airlines",
+      "iata": "UA",
+      "icao": "UAL"
+    },
+    "flight": {
+      "number": "4326",
+      "iata": "UA4326",
+      "icao": "UAL4326",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N69753",
+      "iata": "E175",
+      "icao": "B738",
+      "icao24": "535bc6"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Memphis International Airport",
+      "timezone": "America/New_York",
+      "iata": "MEM",
+      "icao": "KMEM",
+      "terminal": "3",
+      "gate": "D7",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-07T01:35:00+00:00",
+      "estimated": "2026-04-07T01:55:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Daniel K Inouye International Airport",
+      "timezone": "America/New_York",
+      "iata": "HNL",
+      "icao": "KHNL",
+      "terminal": "2",
+      "gate": "D3",
+      "baggage": "5",
+      "delay": 15,
+      "scheduled": "2026-04-07T07:05:00+00:00",
+      "estimated": "2026-04-07T07:20:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "icao": "FFT"
+    },
+    "flight": {
+      "number": "3059",
+      "iata": "F93059",
+      "icao": "FFT3059",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N29148",
+      "iata": "E175",
+      "icao": "E75L",
+      "icao24": "26d47b"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-07",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Cincinnati Northern Kentucky International Airport",
+      "timezone": "America/New_York",
+      "iata": "CVG",
+      "icao": "KCVG",
+      "terminal": "2",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-07T05:15:00+00:00",
+      "estimated": "2026-04-07T05:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Los Angeles International Airport",
+      "timezone": "America/New_York",
+      "iata": "LAX",
+      "icao": "KLAX",
+      "terminal": "C",
+      "gate": "B8",
+      "baggage": "6",
+      "delay": 10,
+      "scheduled": "2026-04-07T10:40:00+00:00",
+      "estimated": "2026-04-07T10:50:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "icao": "NKS"
+    },
+    "flight": {
+      "number": "2800",
+      "iata": "NK2800",
+      "icao": "NKS2800",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N30034",
+      "iata": "B738",
+      "icao": "B737",
+      "icao24": "103d3d"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-01",
+    "flight_status": "active",
+    "departure": {
+      "airport": "Fort Lauderdale Hollywood International Airport",
+      "timezone": "America/New_York",
+      "iata": "FLL",
+      "icao": "KFLL",
+      "terminal": "A",
+      "gate": "A5",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-01T09:35:00+00:00",
+      "estimated": "2026-04-01T09:55:00+00:00",
+      "actual": "2026-04-01T09:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Salt Lake City International Airport",
+      "timezone": "America/New_York",
+      "iata": "SLC",
+      "icao": "KSLC",
+      "terminal": "4",
+      "gate": null,
+      "baggage": "10",
+      "delay": 20,
+      "scheduled": "2026-04-01T10:40:00+00:00",
+      "estimated": "2026-04-01T11:00:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "3682",
+      "iata": "DL3682",
+      "icao": "DAL3682",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N61397",
+      "iata": "B737",
+      "icao": "E75L",
+      "icao24": "6b3103"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-05",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "John Glenn Columbus International Airport",
+      "timezone": "America/New_York",
+      "iata": "CMH",
+      "icao": "KCMH",
+      "terminal": "2",
+      "gate": "B2",
+      "baggage": null,
+      "delay": 15,
+      "scheduled": "2026-04-05T01:45:00+00:00",
+      "estimated": "2026-04-05T02:00:00+00:00",
+      "actual": "2026-04-05T02:00:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Baltimore/Washington International Thurgood Marshall Airport",
+      "timezone": "America/New_York",
+      "iata": "BWI",
+      "icao": "KBWI",
+      "terminal": "4",
+      "gate": "B8",
+      "baggage": "7",
+      "delay": 45,
+      "scheduled": "2026-04-05T04:55:00+00:00",
+      "estimated": "2026-04-05T05:40:00+00:00",
+      "actual": "2026-04-05T05:40:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "JetBlue Airways",
+      "iata": "B6",
+      "icao": "JBU"
+    },
+    "flight": {
+      "number": "1280",
+      "iata": "B61280",
+      "icao": "JBU1280",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N57722",
+      "iata": "A321",
+      "icao": "B737",
+      "icao24": "7e382e"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Baltimore/Washington International Thurgood Marshall Airport",
+      "timezone": "America/New_York",
+      "iata": "BWI",
+      "icao": "KBWI",
+      "terminal": null,
+      "gate": "A5",
+      "baggage": null,
+      "delay": null,
+      "scheduled": "2026-04-04T10:15:00+00:00",
+      "estimated": "2026-04-04T10:15:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Los Angeles International Airport",
+      "timezone": "America/New_York",
+      "iata": "LAX",
+      "icao": "KLAX",
+      "terminal": "B",
+      "gate": null,
+      "baggage": "6",
+      "delay": 30,
+      "scheduled": "2026-04-04T13:10:00+00:00",
+      "estimated": "2026-04-04T13:40:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "3008",
+      "iata": "DL3008",
+      "icao": "DAL3008",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N70686",
+      "iata": "B737",
+      "icao": "A321",
+      "icao24": "412d23"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-04",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Washington Dulles International Airport",
+      "timezone": "America/New_York",
+      "iata": "IAD",
+      "icao": "KIAD",
+      "terminal": "4",
+      "gate": null,
+      "baggage": null,
+      "delay": 5,
+      "scheduled": "2026-04-04T06:50:00+00:00",
+      "estimated": "2026-04-04T06:55:00+00:00",
+      "actual": "2026-04-04T06:55:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Detroit Metropolitan Wayne County Airport",
+      "timezone": "America/New_York",
+      "iata": "DTW",
+      "icao": "KDTW",
+      "terminal": "3",
+      "gate": "A2",
+      "baggage": "12",
+      "delay": null,
+      "scheduled": "2026-04-04T11:25:00+00:00",
+      "estimated": "2026-04-04T11:25:00+00:00",
+      "actual": "2026-04-04T11:25:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "4023",
+      "iata": "WN4023",
+      "icao": "SWA4023",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N60364",
+      "iata": "E175",
+      "icao": "B737",
+      "icao24": "9dbe27"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-08",
+    "flight_status": "landed",
+    "departure": {
+      "airport": "Eppley Airfield",
+      "timezone": "America/New_York",
+      "iata": "OMA",
+      "icao": "KOMA",
+      "terminal": "A",
+      "gate": "A1",
+      "baggage": null,
+      "delay": 20,
+      "scheduled": "2026-04-08T23:20:00+00:00",
+      "estimated": "2026-04-08T23:40:00+00:00",
+      "actual": "2026-04-08T23:40:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "LaGuardia Airport",
+      "timezone": "America/New_York",
+      "iata": "LGA",
+      "icao": "KLGA",
+      "terminal": "B",
+      "gate": "A6",
+      "baggage": "6",
+      "delay": null,
+      "scheduled": "2026-04-09T01:30:00+00:00",
+      "estimated": "2026-04-09T01:30:00+00:00",
+      "actual": "2026-04-09T01:30:00+00:00",
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Southwest Airlines",
+      "iata": "WN",
+      "icao": "SWA"
+    },
+    "flight": {
+      "number": "1090",
+      "iata": "WN1090",
+      "icao": "SWA1090",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N32283",
+      "iata": "A321",
+      "icao": "E75L",
+      "icao24": "ad52ad"
+    },
+    "live": null
+  },
+  {
+    "flight_date": "2026-04-05",
+    "flight_status": "scheduled",
+    "departure": {
+      "airport": "Richmond International Airport",
+      "timezone": "America/New_York",
+      "iata": "RIC",
+      "icao": "KRIC",
+      "terminal": "A",
+      "gate": "B2",
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-05T08:10:00+00:00",
+      "estimated": "2026-04-05T08:55:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "arrival": {
+      "airport": "Raleigh Durham International Airport",
+      "timezone": "America/New_York",
+      "iata": "RDU",
+      "icao": "KRDU",
+      "terminal": "1",
+      "gate": "A6",
+      "baggage": null,
+      "delay": 45,
+      "scheduled": "2026-04-05T10:45:00+00:00",
+      "estimated": "2026-04-05T11:30:00+00:00",
+      "actual": null,
+      "estimated_runway": null,
+      "actual_runway": null
+    },
+    "airline": {
+      "name": "Delta Air Lines",
+      "iata": "DL",
+      "icao": "DAL"
+    },
+    "flight": {
+      "number": "947",
+      "iata": "DL947",
+      "icao": "DAL947",
+      "codeshared": null
+    },
+    "aircraft": {
+      "registration": "N94111",
+      "iata": "E175",
+      "icao": "A321",
+      "icao24": "a9fe2f"
+    },
+    "live": null
+  }
+]
