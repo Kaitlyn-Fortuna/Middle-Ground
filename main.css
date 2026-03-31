@@ -39,6 +39,42 @@ h1 {
   gap: 16px;
 }
 
+.api-key-row {
+  align-items: stretch;
+}
+
+.api-key-input-wrap {
+  flex: 1;
+}
+
+.form-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 9px 12px;
+  color: #0f172a;
+  font: inherit;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+.form-input:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+
+.form-input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
 .panel {
   background: linear-gradient(180deg, #ffffff 0%, #fefefe 100%);
   border-radius: 14px;
@@ -163,6 +199,18 @@ button:active {
   background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
 }
 
+#resetBtn {
+  background: #fef2f2;
+  color: #9f1239;
+  border-color: #fecdd3;
+}
+
+#resetBtn:hover {
+  background: #ffe4e6;
+  color: #881337;
+  box-shadow: 0 8px 14px rgba(190, 24, 93, 0.14);
+}
+
 input {
   width: auto;
   accent-color: #2563eb;
@@ -243,6 +291,10 @@ pre {
   color: #64748b;
 }
 
+.hidden {
+  display: none;
+}
+
 @media (max-width: 960px) {
   .layout-grid {
     grid-template-columns: 1fr;
@@ -251,6 +303,10 @@ pre {
   .hero {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .api-key-input-wrap {
+    width: 100%;
   }
 }
 

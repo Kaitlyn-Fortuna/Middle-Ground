@@ -8,6 +8,122 @@ const rankBtn = document.getElementById("rankBtn");
 const maxFlightTimeEl = document.getElementById("max-flight-time");
 const maxFlightTimeValueEl = document.getElementById("max-flight-time-value");
 const resultsListEl = document.getElementById("resultsList");
+const apiKeyInputEl = document.getElementById("apiKeyInput");
+const submitBtn = document.getElementById("submitBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+let submittedApiKey = "";
+let hasSubmittedApiKey = false;
+let isEditingApiKey = false;
+
+function getApiKeyDraft() {
+  return (apiKeyInputEl?.value || "").trim();
+}
+
+function isApiKeyChanged() {
+  return getApiKeyDraft() !== submittedApiKey;
+}
+
+function updateApiKeyButtonText() {
+  if (!submitBtn || !apiKeyInputEl) return;
+
+  if (!hasSubmittedApiKey) {
+    submitBtn.textContent = getApiKeyDraft() ? "Submit" : "Paste & Submit";
+    return;
+  }
+
+  if (!isEditingApiKey) {
+    submitBtn.textContent = "Edit";
+    return;
+  }
+
+  submitBtn.textContent = isApiKeyChanged() ? "Update" : "Cancel";
+}
+
+function syncApiKeyUI() {
+  if (!apiKeyInputEl) return;
+  apiKeyInputEl.disabled = hasSubmittedApiKey && !isEditingApiKey;
+  if (resetBtn) {
+    const showReset = hasSubmittedApiKey && !isEditingApiKey;
+    resetBtn.classList.toggle("hidden", !showReset);
+  }
+  updateApiKeyButtonText();
+}
+
+async function pasteFromClipboardIfEmpty() {
+  if (!apiKeyInputEl || getApiKeyDraft()) return;
+  try {
+    const clipboardText = await navigator.clipboard.readText();
+    const trimmed = clipboardText.trim();
+    if (trimmed) {
+      apiKeyInputEl.value = trimmed;
+    }
+  } catch (error) {
+    // Ignore clipboard access errors and fall back to manual typing.
+  }
+}
+
+function submitApiKeyValue() {
+  const value = getApiKeyDraft();
+  if (!value) {
+    setOutput({ error: "Please enter an API key before submitting." });
+    return false;
+  }
+
+  submittedApiKey = value;
+  hasSubmittedApiKey = true;
+  isEditingApiKey = false;
+  apiKeyInputEl.value = value;
+  setOutput({ status: "ok", message: "API key submitted and locked." });
+  syncApiKeyUI();
+  return true;
+}
+
+function enterApiKeyEditMode() {
+  isEditingApiKey = true;
+  syncApiKeyUI();
+  apiKeyInputEl.focus();
+  apiKeyInputEl.setSelectionRange(apiKeyInputEl.value.length, apiKeyInputEl.value.length);
+}
+
+function cancelApiKeyEdit() {
+  isEditingApiKey = false;
+  apiKeyInputEl.value = submittedApiKey;
+  syncApiKeyUI();
+}
+
+function resetApiKeyState() {
+  submittedApiKey = "";
+  hasSubmittedApiKey = false;
+  isEditingApiKey = false;
+  if (apiKeyInputEl) {
+    apiKeyInputEl.value = "";
+  }
+  setOutput({ status: "ok", message: "API key reset." });
+  syncApiKeyUI();
+}
+
+async function handleApiKeySubmitButtonClick() {
+  if (!apiKeyInputEl || !submitBtn) return;
+
+  if (!hasSubmittedApiKey) {
+    await pasteFromClipboardIfEmpty();
+    submitApiKeyValue();
+    return;
+  }
+
+  if (!isEditingApiKey) {
+    enterApiKeyEditMode();
+    return;
+  }
+
+  if (!isApiKeyChanged()) {
+    cancelApiKeyEdit();
+    return;
+  }
+
+  submitApiKeyValue();
+}
 
 function setOutput(data) {
   outputEl.textContent = JSON.stringify(data, null, 2);
@@ -137,5 +253,18 @@ rankBtn.addEventListener("click", async () => {
   }
 });
 
+apiKeyInputEl?.addEventListener("input", () => {
+  updateApiKeyButtonText();
+});
+
+submitBtn?.addEventListener("click", async () => {
+  await handleApiKeySubmitButtonClick();
+});
+
+resetBtn?.addEventListener("click", () => {
+  resetApiKeyState();
+});
+
 maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
 updatePayloadPreview();
+syncApiKeyUI();
