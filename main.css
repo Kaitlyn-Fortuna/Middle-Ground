@@ -38,6 +38,11 @@ h1 {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
   gap: 14px;
+  align-items: start;
+}
+
+.layout-grid.single-column {
+  grid-template-columns: 1fr;
 }
 
 .hero {
@@ -351,6 +356,19 @@ button:active {
   box-shadow: 0 8px 14px rgba(190, 24, 93, 0.14);
 }
 
+#resetSearchBtn {
+  margin-left: auto;
+  background: #fef2f2;
+  color: #9f1239;
+  border-color: #fecdd3;
+}
+
+#resetSearchBtn:hover {
+  background: #ffe4e6;
+  color: #881337;
+  box-shadow: 0 8px 14px rgba(190, 24, 93, 0.14);
+}
+
 input {
   width: auto;
   accent-color: #2563eb;
@@ -371,13 +389,23 @@ pre {
 #requestPayload,
 #output {
   height: 240px;
+  min-height: 240px;
   max-height: 240px;
+  overflow-y: auto;
+  overflow-x: auto;
   white-space: pre;
+}
+
+.stack > div {
+  min-height: 0;
+  align-self: start;
 }
 
 .stack {
   display: grid;
   gap: 14px;
+  align-content: start;
+  grid-auto-rows: min-content;
 }
 
 .results-list {

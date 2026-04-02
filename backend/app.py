@@ -14,16 +14,6 @@ from airportFiltering import (
     overall_rank,
     run_all_ranks,
 )
-from parseResults import (
-    load_flights_dataset_json
-)
-from flightFiltering import (
-    build_destination_rank_map,
-    compute_flight_duration_hours,
-    initialize_ranked_flights,
-    overall_flight_rank,
-    run_all_flight_ranks,
-)
 
 
 app = Flask(__name__)
@@ -145,55 +135,31 @@ def rank_combined():
         airports = import_airport_data()
         ranked_airports = initialize_ranked_airports(airports)
         airport_rank = overall_rank(run_all_ranks(ranked_airports, filters), filters)
-        destination_rank_map = build_destination_rank_map(airport_rank.ranked)
+        airport_results = airport_rank.ranked
 
-        results_text_path = DATA_DIR / "results-text.json"
-        if not results_text_path.exists():
-            results_text_path = DATA_DIR / "results-test.json"
+        if filters.airports:
+            selected_airports = {iata.upper() for iata in filters.airports}
+            airport_results = [
+                ranked
+                for ranked in airport_results
+                if ranked.airport.iata_code.upper() in selected_airports
+            ]
 
-        flights = load_flights_dataset_json(results_text_path)
-        ranked_flights = initialize_ranked_flights(flights, destination_rank_map)
-        flight_rank = overall_flight_rank(run_all_flight_ranks(ranked_flights, filters), filters)
+        limited_ranked = airport_results[:limit]
+        limited_results = []
 
-        combined_results = []
-        for ranked_flight in flight_rank.ranked:
-            airport_percent = (
-                ranked_flight.destination_airport_rank.percent_match
-                if ranked_flight.destination_airport_rank is not None and ranked_flight.destination_airport_rank.percent_match is not None
-                else 0.0
-            )
-            flight_percent = ranked_flight.percent_match if ranked_flight.percent_match is not None else 0.0
-            total_percent = (airport_percent + flight_percent) / 2.0
-            flight_time_hours = compute_flight_duration_hours(ranked_flight.flight)
-
-            combined_results.append(
+        for idx, ranked_airport in enumerate(limited_ranked, start=1):
+            limited_results.append(
                 {
-                    "departure_iata": ranked_flight.flight.departure_iata,
-                    "arrival_iata": ranked_flight.flight.arrival_iata,
-                    "flight_iata": ranked_flight.flight.flight_iata,
-                    "airline_iata": ranked_flight.flight.airline_iata,
-                    "flight_status": ranked_flight.flight.flight_status,
-                    "flight_date": ranked_flight.flight.flight_date,
-                    "flight_time_hours": round(flight_time_hours, 2) if flight_time_hours is not None else None,
-                    "percent_match_airport": round(airport_percent, 3),
-                    "percent_match_flight": round(flight_percent, 3),
-                    "percent_match_total": round(total_percent, 3),
-                    "airport_scores": (
-                        ranked_flight.destination_airport_rank.scores
-                        if ranked_flight.destination_airport_rank is not None
-                        else None
-                    ),
-                    "flight_scores": ranked_flight.scores,
-                    "departure_scheduled": ranked_flight.flight.raw_result.departure.scheduled,
-                    "arrival_scheduled": ranked_flight.flight.raw_result.arrival.scheduled,
+                    "rank": idx,
+                    "iata_code": ranked_airport.airport.iata_code,
+                    "airport_name": ranked_airport.airport.name,
+                    "percent_match": round(ranked_airport.percent_match, 3)
+                    if ranked_airport.percent_match is not None
+                    else None,
+                    "scores": ranked_airport.scores,
                 }
             )
-
-        combined_results.sort(key=lambda x: x["percent_match_total"], reverse=True)
-        limited_results = combined_results[:limit]
-
-        for idx, row in enumerate(limited_results, start=1):
-            row["rank"] = idx
 
         return jsonify(
             {
@@ -202,8 +168,9 @@ def rank_combined():
                 "results": limited_results,
                 "active_score_keys": {
                     "airport": sorted(airport_rank.active_score_keys),
-                    "flight": sorted(flight_rank.active_score_keys),
+                    "flight": [],
                 },
+                "message": "Flight ranking is currently disabled. Combined ranking returns airport ranking only.",
             }
         )
     except Exception as exc:

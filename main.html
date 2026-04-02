@@ -59,7 +59,7 @@
         </div>
       </section>
 
-      <div class="layout-grid">
+      <div class="layout-grid single-column">
         <section class="panel">
           <h2>Filters</h2>
           <p class="section-hint">Select the travel profile you want. Leave categories blank to skip them.</p>
@@ -105,35 +105,16 @@
           </div>
 
           <div class="controls controls-tight">
-            <button id="buildPayloadBtn" class="btn-secondary">Build Payload</button>
-            <button id="rankBtn" class="btn-primary">Run Combined Ranking</button>
-          </div>
-        </section>
-
-        <section class="panel stack">
-          <div>
-            <h2>Request Payload</h2>
-            <pre id="requestPayload">{
-  "departure_date": null,
-  "return_date": null,
-  "airports": [],
-  "weather_preferences": [],
-  "conditions_preferences": [],
-  "geography_preferences": []
-}</pre>
-          </div>
-
-          <div>
-            <h2>API Response</h2>
-            <pre id="output">Run a request to see API response JSON here...</pre>
+            <button id="rankBtn" class="btn-primary">Optimize Travel</button>
+            <button id="resetSearchBtn" class="btn-secondary">Reset Trip</button>
           </div>
         </section>
       </div>
 
       <section class="panel">
-        <h2>Ranked Flight + Airport Results</h2>
+        <h2>Ranked Combined Results</h2>
         <div id="resultsList" class="results-list">
-          <p class="empty-results">Run combined ranking to see routes and score breakdown.</p>
+          <p class="empty-results">Run combined ranking to see ranked airports.</p>
         </div>
       </section>
     </main>

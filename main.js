@@ -3,8 +3,8 @@ const API_BASE = "http://127.0.0.1:5001/api";
 const outputEl = document.getElementById("output");
 const healthBtn = document.getElementById("healthBtn");
 const requestPayloadEl = document.getElementById("requestPayload");
-const buildPayloadBtn = document.getElementById("buildPayloadBtn");
 const rankBtn = document.getElementById("rankBtn");
+const resetSearchBtn = document.getElementById("resetSearchBtn");
 const maxFlightTimeEl = document.getElementById("max-flight-time");
 const maxFlightTimeValueEl = document.getElementById("max-flight-time-value");
 const resultsListEl = document.getElementById("resultsList");
@@ -17,15 +17,276 @@ const airportInputEl = document.getElementById("airport-input");
 const airportSuggestionsEl = document.getElementById("airport-suggestions");
 const airportChipsEl = document.getElementById("airport-chips");
 
+const WEATHER_OPTIONS = [
+  ["weather-hot", "hot"],
+  ["weather-warm", "warm"],
+  ["weather-mild", "mild"],
+  ["weather-cool", "cool"],
+  ["weather-cold", "cold"],
+];
+const CONDITIONS_OPTIONS = [
+  ["conditions-sunny", "sunny"],
+  ["conditions-dry", "dry"],
+  ["conditions-wet", "wet"],
+  ["conditions-low-humidity", "low humidity"],
+  ["conditions-high-humidity", "high humidity"],
+];
+const GEOGRAPHY_OPTIONS = [
+  ["geography-coastal", "coastal"],
+  ["geography-beach", "beach"],
+  ["geography-urban", "urban"],
+  ["geography-mountainous", "mountainous"],
+];
+const WEATHER_ID_ORDER = WEATHER_OPTIONS.map(([id]) => id);
+const WEATHER_ID_TO_INDEX = new Map(WEATHER_ID_ORDER.map((id, index) => [id, index]));
+const FILTER_CHECKBOX_IDS = [...WEATHER_OPTIONS, ...CONDITIONS_OPTIONS, ...GEOGRAPHY_OPTIONS].map(
+  ([id]) => id
+);
+
+const AIRPORT_COMMIT_KEYS = new Set(["Enter", "Tab", ",", ".", "\"", " "]);
+const STORAGE_KEYS = {
+  api: "middleground.apiKeyState.v1",
+  ui: "middleground.uiState.v1",
+  results: "middleground.resultsState.v1",
+};
+const DEFAULT_OUTPUT_TEXT = "API responses are now logged to the browser console.";
+const DEFAULT_RESULTS_HTML =
+  '<p class="empty-results">Run combined ranking to see ranked airports.</p>';
+const DEFAULT_MAX_FLIGHT_TIME = Number(maxFlightTimeEl?.defaultValue || 6);
+
 let submittedApiKey = "";
 let hasSubmittedApiKey = false;
 let isEditingApiKey = false;
+
 let airportCatalog = [];
 let airportMatches = [];
 let selectedAirports = [];
 let highlightedAirportIndex = 0;
 
-const AIRPORT_COMMIT_KEYS = new Set(["Enter", "Tab", ",", ".", "\"", " "]);
+let persistedOutputData = null;
+let persistedCombinedData = null;
+
+function readStorageJSON(key) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null ? parsed : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function writeStorageJSON(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (_error) {
+    // Ignore storage quota/privacy mode errors.
+  }
+}
+
+function removeStorage(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore storage errors.
+  }
+}
+
+function sanitizeAirportSelection(value) {
+  if (!value || typeof value !== "object") return null;
+  const iataCode = String(value.iata_code || "")
+    .trim()
+    .toUpperCase();
+  if (!iataCode) return null;
+  return {
+    iata_code: iataCode,
+    name: String(value.name || "").trim(),
+    municipality: String(value.municipality || "").trim(),
+    iso_region: String(value.iso_region || "").trim(),
+  };
+}
+
+function saveApiKeyState() {
+  writeStorageJSON(STORAGE_KEYS.api, {
+    submittedApiKey,
+    hasSubmittedApiKey,
+  });
+}
+
+function loadApiKeyState() {
+  const state = readStorageJSON(STORAGE_KEYS.api);
+  if (!state) return;
+
+  const loadedKey = typeof state.submittedApiKey === "string" ? state.submittedApiKey.trim() : "";
+  const loadedSubmitted = Boolean(state.hasSubmittedApiKey && loadedKey);
+
+  submittedApiKey = loadedKey;
+  hasSubmittedApiKey = loadedSubmitted;
+  isEditingApiKey = false;
+
+  if (apiKeyInputEl) {
+    apiKeyInputEl.value = loadedKey;
+  }
+}
+
+function saveUiState() {
+  const checkedIds = FILTER_CHECKBOX_IDS.filter((id) => {
+    const el = document.getElementById(id);
+    return Boolean(el?.checked);
+  });
+
+  writeStorageJSON(STORAGE_KEYS.ui, {
+    departure_date: departureDateEl?.value || "",
+    return_date: returnDateEl?.value || "",
+    airports: selectedAirports,
+    max_flight_time: Number(maxFlightTimeEl?.value || DEFAULT_MAX_FLIGHT_TIME),
+    checked_ids: checkedIds,
+  });
+}
+
+function getSelectedWeatherIds() {
+  return WEATHER_ID_ORDER.filter((id) => {
+    const el = document.getElementById(id);
+    return Boolean(el?.checked);
+  });
+}
+
+function isWeatherSelectionValid(selectedWeatherIds) {
+  if (selectedWeatherIds.length > 3) return false;
+  if (selectedWeatherIds.length <= 1) return true;
+
+  const selectedIndexes = selectedWeatherIds
+    .map((id) => WEATHER_ID_TO_INDEX.get(id))
+    .filter((value) => typeof value === "number")
+    .sort((a, b) => a - b);
+
+  for (let i = 1; i < selectedIndexes.length; i += 1) {
+    if (selectedIndexes[i] !== selectedIndexes[i - 1] + 1) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function normalizeWeatherSelection() {
+  const selectedIndexes = getSelectedWeatherIds()
+    .map((id) => WEATHER_ID_TO_INDEX.get(id))
+    .filter((value) => typeof value === "number")
+    .sort((a, b) => a - b);
+
+  if (selectedIndexes.length === 0) return false;
+  if (isWeatherSelectionValid(getSelectedWeatherIds())) return false;
+
+  const runs = [];
+  let currentRun = [selectedIndexes[0]];
+
+  for (let i = 1; i < selectedIndexes.length; i += 1) {
+    const indexValue = selectedIndexes[i];
+    if (indexValue === currentRun[currentRun.length - 1] + 1) {
+      currentRun.push(indexValue);
+    } else {
+      runs.push(currentRun);
+      currentRun = [indexValue];
+    }
+  }
+  runs.push(currentRun);
+
+  runs.sort((a, b) => b.length - a.length || a[0] - b[0]);
+  const chosen = runs[0].slice(0, 3);
+  const chosenSet = new Set(chosen.map((indexValue) => WEATHER_ID_ORDER[indexValue]));
+
+  WEATHER_ID_ORDER.forEach((id) => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) {
+      checkbox.checked = chosenSet.has(id);
+    }
+  });
+
+  return true;
+}
+
+function enforceWeatherSelectionRules(changedId = null) {
+  const selectedIds = getSelectedWeatherIds();
+  if (isWeatherSelectionValid(selectedIds)) return false;
+
+  if (changedId) {
+    const changedCheckbox = document.getElementById(changedId);
+    if (changedCheckbox?.checked) {
+      changedCheckbox.checked = false;
+      return true;
+    }
+  }
+
+  return normalizeWeatherSelection();
+}
+
+function loadUiState() {
+  const state = readStorageJSON(STORAGE_KEYS.ui);
+  if (!state) return;
+
+  if (departureDateEl && typeof state.departure_date === "string") {
+    departureDateEl.value = state.departure_date;
+  }
+
+  if (returnDateEl && typeof state.return_date === "string") {
+    returnDateEl.value = state.return_date;
+  }
+
+  if (maxFlightTimeEl && Number.isFinite(Number(state.max_flight_time))) {
+    maxFlightTimeEl.value = String(Number(state.max_flight_time));
+  }
+
+  const checkedSet = new Set(Array.isArray(state.checked_ids) ? state.checked_ids : []);
+  FILTER_CHECKBOX_IDS.forEach((id) => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) {
+      checkbox.checked = checkedSet.has(id);
+    }
+  });
+
+  const loadedAirports = Array.isArray(state.airports)
+    ? state.airports.map(sanitizeAirportSelection).filter(Boolean)
+    : [];
+  selectedAirports = loadedAirports;
+  normalizeWeatherSelection();
+  renderAirportChips();
+}
+
+function saveResultsState() {
+  writeStorageJSON(STORAGE_KEYS.results, {
+    output_data: persistedOutputData,
+    combined_data: persistedCombinedData,
+  });
+}
+
+function loadResultsState() {
+  const state = readStorageJSON(STORAGE_KEYS.results);
+  if (!state) {
+    if (outputEl) {
+      outputEl.textContent = DEFAULT_OUTPUT_TEXT;
+    }
+    resultsListEl.innerHTML = DEFAULT_RESULTS_HTML;
+    return;
+  }
+
+  if (state.output_data !== undefined && state.output_data !== null) {
+    setOutput(state.output_data, { persist: false });
+    persistedOutputData = state.output_data;
+  } else {
+    if (outputEl) {
+      outputEl.textContent = DEFAULT_OUTPUT_TEXT;
+    }
+  }
+
+  if (state.combined_data && Array.isArray(state.combined_data.results)) {
+    renderCombinedResults(state.combined_data, { persist: false });
+    persistedCombinedData = state.combined_data;
+  } else {
+    resultsListEl.innerHTML = DEFAULT_RESULTS_HTML;
+  }
+}
 
 function getApiKeyDraft() {
   return (apiKeyInputEl?.value || "").trim();
@@ -69,7 +330,7 @@ async function pasteFromClipboardIfEmpty() {
     if (trimmed) {
       apiKeyInputEl.value = trimmed;
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore clipboard access errors and fall back to manual typing.
   }
 }
@@ -85,6 +346,7 @@ function submitApiKeyValue() {
   hasSubmittedApiKey = true;
   isEditingApiKey = false;
   apiKeyInputEl.value = value;
+  saveApiKeyState();
   setOutput({ status: "ok", message: "API key submitted and locked." });
   syncApiKeyUI();
   return true;
@@ -110,6 +372,7 @@ function resetApiKeyState() {
   if (apiKeyInputEl) {
     apiKeyInputEl.value = "";
   }
+  saveApiKeyState();
   setOutput({ status: "ok", message: "API key reset." });
   syncApiKeyUI();
 }
@@ -136,8 +399,15 @@ async function handleApiKeySubmitButtonClick() {
   submitApiKeyValue();
 }
 
-function setOutput(data) {
-  outputEl.textContent = JSON.stringify(data, null, 2);
+function setOutput(data, { persist = true } = {}) {
+  if (outputEl) {
+    outputEl.textContent = JSON.stringify(data, null, 2);
+  }
+  console.log("[MiddleGround API Response]", data);
+  if (!persist) return;
+
+  persistedOutputData = data;
+  saveResultsState();
 }
 
 function normalizeSearchText(value) {
@@ -241,7 +511,7 @@ function renderAirportSuggestions() {
   airportSuggestionsEl.innerHTML = airportMatches
     .map(
       (airport, index) => `
-      <li class="airport-suggestion ${index === highlightedAirportIndex ? "active" : ""}" data-iata="${airport.iata_code}" data-index="${index}">
+      <li class="airport-suggestion ${index === highlightedAirportIndex ? "active" : ""}" data-iata="${airport.iata_code}">
         <span class="airport-suggestion-code">${airport.iata_code}</span>
         <span class="airport-suggestion-text">${formatAirportLabel(airport)}</span>
       </li>
@@ -288,8 +558,9 @@ function addAirportSelection(airport) {
   if (!airport) return false;
   if (selectedAirports.some((item) => item.iata_code === airport.iata_code)) return false;
 
-  selectedAirports = [...selectedAirports, airport];
+  selectedAirports = [...selectedAirports, sanitizeAirportSelection(airport)].filter(Boolean);
   renderAirportChips();
+  saveUiState();
   updatePayloadPreview();
   return true;
 }
@@ -318,6 +589,7 @@ function removeSelectedAirport(iataCode) {
   selectedAirports = selectedAirports.filter((airport) => airport.iata_code !== normalized);
   renderAirportChips();
   updateAirportMatches();
+  saveUiState();
   updatePayloadPreview();
 }
 
@@ -334,6 +606,15 @@ async function loadAirportCatalog() {
     airportCatalog = rows
       .map(makeAirportRecord)
       .filter((airport) => airport.iata_code && airport.name);
+
+    const airportsByIata = new Map(airportCatalog.map((airport) => [airport.iata_code, airport]));
+    selectedAirports = selectedAirports
+      .map((airport) => airportsByIata.get(airport.iata_code) || airport)
+      .map(sanitizeAirportSelection)
+      .filter(Boolean);
+    renderAirportChips();
+    saveUiState();
+    updatePayloadPreview();
 
     airportInputEl.disabled = false;
     airportInputEl.placeholder = airportCatalog.length
@@ -352,34 +633,66 @@ function toPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
-function renderCombinedResults(data) {
+function renderCombinedResults(data, { persist = true } = {}) {
   const rows = Array.isArray(data?.results) ? data.results : [];
   if (rows.length === 0) {
     resultsListEl.innerHTML = '<p class="empty-results">No results found for this filter set.</p>';
-    return;
+  } else {
+    const firstRow = rows[0] || {};
+    const isAirportOnlyResult = Object.prototype.hasOwnProperty.call(firstRow, "iata_code");
+
+    resultsListEl.innerHTML = isAirportOnlyResult
+      ? rows
+          .map(
+            (row) => `
+          <article class="result-card">
+            <div class="result-head">
+              <div class="route">#${row.rank} ${row.iata_code}${row.airport_name ? ` - ${row.airport_name}` : ""}</div>
+              <div class="score-total">Match: ${toPercent(row.percent_match)}</div>
+            </div>
+            <div class="score-breakdown">
+              <span>Airport Match: <strong>${toPercent(row.percent_match)}</strong></span>
+            </div>
+          </article>
+        `
+          )
+          .join("")
+      : rows
+          .map(
+            (row) => `
+          <article class="result-card">
+            <div class="result-head">
+              <div class="route">#${row.rank} ${row.departure_iata} → ${row.arrival_iata}</div>
+              <div class="score-total">Total: ${toPercent(row.percent_match_total)}</div>
+            </div>
+            <div class="meta">
+              Flight ${row.flight_iata || "N/A"} • Airline ${row.airline_iata || "N/A"} •
+              Status ${row.flight_status || "N/A"} • Flight Time ${row.flight_time_hours ?? "N/A"}h
+            </div>
+            <div class="score-breakdown">
+              <span>Airport: <strong>${toPercent(row.percent_match_airport)}</strong></span>
+              <span>Flight: <strong>${toPercent(row.percent_match_flight)}</strong></span>
+              <span>Total: <strong>${toPercent(row.percent_match_total)}</strong></span>
+            </div>
+          </article>
+        `
+          )
+          .join("");
   }
 
-  resultsListEl.innerHTML = rows
-    .map(
-      (row) => `
-        <article class="result-card">
-          <div class="result-head">
-            <div class="route">#${row.rank} ${row.departure_iata} → ${row.arrival_iata}</div>
-            <div class="score-total">Total: ${toPercent(row.percent_match_total)}</div>
-          </div>
-          <div class="meta">
-            Flight ${row.flight_iata || "N/A"} • Airline ${row.airline_iata || "N/A"} •
-            Status ${row.flight_status || "N/A"} • Flight Time ${row.flight_time_hours ?? "N/A"}h
-          </div>
-          <div class="score-breakdown">
-            <span>Airport: <strong>${toPercent(row.percent_match_airport)}</strong></span>
-            <span>Flight: <strong>${toPercent(row.percent_match_flight)}</strong></span>
-            <span>Total: <strong>${toPercent(row.percent_match_total)}</strong></span>
-          </div>
-        </article>
-      `
-    )
-    .join("");
+  if (!persist) return;
+  persistedCombinedData = data;
+  saveResultsState();
+}
+
+function clearResultsView() {
+  if (outputEl) {
+    outputEl.textContent = DEFAULT_OUTPUT_TEXT;
+  }
+  resultsListEl.innerHTML = DEFAULT_RESULTS_HTML;
+  persistedOutputData = null;
+  persistedCombinedData = null;
+  removeStorage(STORAGE_KEYS.results);
 }
 
 function getCheckedValues(pairs) {
@@ -392,42 +705,69 @@ function getCheckedValues(pairs) {
 }
 
 function buildFiltersPayload() {
+  enforceWeatherSelectionRules();
   return {
     departure_date: departureDateEl?.value || null,
     return_date: returnDateEl?.value || null,
     airports: selectedAirports.map((airport) => airport.iata_code),
-    weather_preferences: getCheckedValues([
-      ["weather-hot", "hot"],
-      ["weather-warm", "warm"],
-      ["weather-mild", "mild"],
-      ["weather-cool", "cool"],
-      ["weather-cold", "cold"],
-    ]),
-    conditions_preferences: getCheckedValues([
-      ["conditions-sunny", "sunny"],
-      ["conditions-dry", "dry"],
-      ["conditions-wet", "wet"],
-      ["conditions-low-humidity", "low humidity"],
-      ["conditions-high-humidity", "high humidity"],
-    ]),
-    geography_preferences: getCheckedValues([
-      ["geography-coastal", "coastal"],
-      ["geography-beach", "beach"],
-      ["geography-urban", "urban"],
-      ["geography-mountainous", "mountainous"],
-    ]),
+    weather_preferences: getCheckedValues(WEATHER_OPTIONS),
+    conditions_preferences: getCheckedValues(CONDITIONS_OPTIONS),
+    geography_preferences: getCheckedValues(GEOGRAPHY_OPTIONS),
     max_flight_time: Number(maxFlightTimeEl.value),
   };
 }
 
 function updatePayloadPreview() {
   const payload = buildFiltersPayload();
-  requestPayloadEl.textContent = JSON.stringify(payload, null, 2);
+  if (requestPayloadEl) {
+    requestPayloadEl.textContent = JSON.stringify(payload, null, 2);
+  }
+}
+
+function handleUiStateChanged() {
+  updatePayloadPreview();
+  saveUiState();
+}
+
+function resetTripFiltersAndResults() {
+  if (departureDateEl) departureDateEl.value = "";
+  if (returnDateEl) returnDateEl.value = "";
+
+  selectedAirports = [];
+  airportMatches = [];
+  highlightedAirportIndex = 0;
+  if (airportInputEl) airportInputEl.value = "";
+  renderAirportChips();
+  renderAirportSuggestions();
+
+  FILTER_CHECKBOX_IDS.forEach((id) => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) {
+      checkbox.checked = false;
+    }
+  });
+
+  if (maxFlightTimeEl) {
+    maxFlightTimeEl.value = String(DEFAULT_MAX_FLIGHT_TIME);
+  }
+  if (maxFlightTimeValueEl) {
+    maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+  }
+
+  removeStorage(STORAGE_KEYS.ui);
+  clearResultsView();
+  updatePayloadPreview();
 }
 
 async function callApi(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, options);
-  const data = await res.json();
+  const rawBody = await res.text();
+  let data = {};
+  try {
+    data = rawBody ? JSON.parse(rawBody) : {};
+  } catch (_error) {
+    data = { message: rawBody || "Request failed" };
+  }
 
   if (!res.ok) {
     throw new Error(data.message || data.error || "Request failed");
@@ -445,17 +785,8 @@ healthBtn.addEventListener("click", async () => {
   }
 });
 
-buildPayloadBtn.addEventListener("click", () => {
-  updatePayloadPreview();
-});
-
-departureDateEl?.addEventListener("input", () => {
-  updatePayloadPreview();
-});
-
-returnDateEl?.addEventListener("input", () => {
-  updatePayloadPreview();
-});
+departureDateEl?.addEventListener("input", handleUiStateChanged);
+returnDateEl?.addEventListener("input", handleUiStateChanged);
 
 airportInputEl?.addEventListener("input", () => {
   updateAirportMatches();
@@ -545,12 +876,27 @@ airportChipsEl?.addEventListener("click", (event) => {
 
 maxFlightTimeEl.addEventListener("input", () => {
   maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
-  updatePayloadPreview();
+  handleUiStateChanged();
+});
+
+WEATHER_ID_ORDER.forEach((id) => {
+  const checkbox = document.getElementById(id);
+  checkbox?.addEventListener("change", () => {
+    enforceWeatherSelectionRules(id);
+    handleUiStateChanged();
+  });
+});
+
+[...CONDITIONS_OPTIONS, ...GEOGRAPHY_OPTIONS].forEach(([id]) => {
+  const checkbox = document.getElementById(id);
+  checkbox?.addEventListener("change", handleUiStateChanged);
 });
 
 rankBtn.addEventListener("click", async () => {
   const payload = buildFiltersPayload();
+  console.log("[MiddleGround Request Payload]", payload);
   updatePayloadPreview();
+  saveUiState();
 
   try {
     const data = await callApi("/rank-combined?limit=25", {
@@ -565,11 +911,19 @@ rankBtn.addEventListener("click", async () => {
   } catch (error) {
     setOutput({ error: error.message });
     resultsListEl.innerHTML = `<p class="empty-results">Error: ${error.message}</p>`;
+    persistedCombinedData = null;
+    saveResultsState();
   }
 });
 
 apiKeyInputEl?.addEventListener("input", () => {
   updateApiKeyButtonText();
+});
+
+apiKeyInputEl?.addEventListener("keydown", async (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  await handleApiKeySubmitButtonClick();
 });
 
 submitBtn?.addEventListener("click", async () => {
@@ -580,7 +934,16 @@ resetBtn?.addEventListener("click", () => {
   resetApiKeyState();
 });
 
+resetSearchBtn?.addEventListener("click", () => {
+  resetTripFiltersAndResults();
+});
+
+loadApiKeyState();
+syncApiKeyUI();
+
+loadUiState();
 maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
 updatePayloadPreview();
-syncApiKeyUI();
+
+loadResultsState();
 loadAirportCatalog();
