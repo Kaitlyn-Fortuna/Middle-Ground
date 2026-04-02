@@ -30,6 +30,35 @@
         </div>
       </div>
 
+      <section class="panel">
+        <h2>Trip Options</h2>
+        <div class="trip-grid">
+          <label class="field-label" for="departure-date">
+            Departure Date
+            <input type="date" id="departure-date" class="form-input" />
+          </label>
+          <label class="field-label" for="return-date">
+            Return Date
+            <input type="date" id="return-date" class="form-input" />
+          </label>
+        </div>
+
+        <div class="field-block airports-field">
+          <label class="field-title" for="airport-input">Airports</label>
+          <div class="airport-selector" id="airport-selector">
+            <div id="airport-chips" class="airport-chips"></div>
+            <input
+              type="text"
+              id="airport-input"
+              class="airport-input"
+              placeholder="Type airport, IATA, or city..."
+              autocomplete="off"
+            />
+          </div>
+          <ul id="airport-suggestions" class="airport-suggestions hidden"></ul>
+        </div>
+      </section>
+
       <div class="layout-grid">
         <section class="panel">
           <h2>Filters</h2>
@@ -85,6 +114,9 @@
           <div>
             <h2>Request Payload</h2>
             <pre id="requestPayload">{
+  "departure_date": null,
+  "return_date": null,
+  "airports": [],
   "weather_preferences": [],
   "conditions_preferences": [],
   "geography_preferences": []

@@ -1,4 +1,5 @@
 from pathlib import Path
+import sqlite3
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -42,9 +43,59 @@ CORS(
 )
 
 
+def load_domestic_large_airports():
+    db_path = DATA_DIR / "airport_data.db"
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                UPPER(TRIM(iata_code)) AS iata_code,
+                name,
+                municipality,
+                iso_region
+            FROM airport_data
+            WHERE iso_country = 'US'
+              AND type = 'large_airport'
+              AND iata_code IS NOT NULL
+              AND TRIM(iata_code) <> ''
+            ORDER BY name COLLATE NOCASE
+            """
+        )
+        rows = cursor.fetchall()
+        return [
+            {
+                "iata_code": row["iata_code"],
+                "name": row["name"],
+                "municipality": row["municipality"],
+                "iso_region": row["iso_region"],
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
+
+
 @app.get("/api/health")
 def health_check():
     return jsonify({"status": "ok", "message": "Flask server is running"})
+
+
+@app.get("/api/airports")
+def list_airports():
+    try:
+        airports = load_domestic_large_airports()
+        return jsonify(
+            {
+                "status": "ok",
+                "count": len(airports),
+                "results": airports,
+            }
+        )
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
 
 
 @app.post("/api/rank")

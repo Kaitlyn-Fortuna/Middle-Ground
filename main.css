@@ -2,8 +2,16 @@ body {
   font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
   margin: 0;
   background:
-    radial-gradient(1200px 500px at 20% -20%, rgba(37, 99, 235, 0.14), transparent 70%),
-    radial-gradient(900px 450px at 100% 0%, rgba(14, 165, 233, 0.12), transparent 60%),
+    radial-gradient(
+      1200px 500px at 20% -20%,
+      rgba(37, 99, 235, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 450px at 100% 0%,
+      rgba(14, 165, 233, 0.12),
+      transparent 60%
+    ),
     linear-gradient(180deg, #f7f9fc 0%, #edf2f9 100%);
   color: #0f172a;
   line-height: 1.45;
@@ -102,6 +110,133 @@ h3 {
   font-size: 0.95rem;
 }
 
+.trip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.field-block {
+  margin-top: 14px;
+}
+
+.field-title {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.airports-field {
+  position: relative;
+}
+
+.airport-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 6px 8px;
+}
+
+.airport-selector:focus-within {
+  outline: 2px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+
+.airport-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.airport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.86rem;
+}
+
+.airport-chip button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.airport-input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 4px;
+  min-width: 220px;
+  flex: 1;
+  font: inherit;
+  color: #0f172a;
+}
+
+.input-hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+.airport-suggestions {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.airport-suggestion {
+  border-radius: 8px;
+  padding: 8px 9px;
+  cursor: pointer;
+}
+
+.airport-suggestion:hover,
+.airport-suggestion.active {
+  background: #eef2ff;
+}
+
+.airport-suggestion-code {
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-right: 8px;
+}
+
+.airport-suggestion-text {
+  color: #334155;
+  font-size: 0.92rem;
+}
+
 .filter-group + .filter-group {
   margin-top: 14px;
 }
@@ -125,7 +260,9 @@ label {
   background: #f8fafc;
   min-height: 36px;
   padding: 6px 10px;
-  transition: background-color 140ms ease, border-color 140ms ease;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
 }
 
 .check-item:hover {
@@ -170,7 +307,10 @@ button {
   cursor: pointer;
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 button:hover {
@@ -297,6 +437,10 @@ pre {
 
 @media (max-width: 960px) {
   .layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-grid {
     grid-template-columns: 1fr;
   }
 
