@@ -27,6 +27,7 @@ class SearchFilters:
 
     max_connections: Optional[int] = None  # user-selected maximum number of connections
     max_flight_time: Optional[int] = None  # user-selected maximum flight time in hours
+    max_flight_cost: Optional[int] = None  # user-selected maximum cost per flight in USD
     budget_cap: Optional[int] = None  # user-selected budget cap in USD
     prefer_nonstop: Optional[bool] = None  # user-selected preference for nonstop flights
     domestic_only: Optional[bool] = None  # user-selected preference for domestic flights only
@@ -133,6 +134,7 @@ def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
     geography = _first_present(data, ("geography_preferences", "Geography", "geography"))
     max_connections = _first_present(data, ("max_connections", "maxConnections"))
     max_flight_time = _first_present(data, ("max_flight_time", "maxFlightTime"))
+    max_flight_cost = _first_present(data, ("max_flight_cost", "maxFlightCost"))
     budget_cap = _first_present(data, ("budget_cap", "budgetCap"))
     prefer_nonstop = _first_present(data, ("prefer_nonstop", "preferNonStop"))
     domestic_only = _first_present(data, ("domestic_only", "domesticOnly"))
@@ -147,6 +149,7 @@ def parse_filters_json(data: Dict[str, Any]) -> SearchFilters:
         geography_preferences=_normalize_string_list(geography),
         max_connections=_parse_optional_int(max_connections),
         max_flight_time=_parse_optional_int(max_flight_time),
+        max_flight_cost=_parse_optional_int(max_flight_cost),
         budget_cap=_parse_optional_int(budget_cap),
         prefer_nonstop=_parse_optional_bool(prefer_nonstop),
         domestic_only=_parse_optional_bool(domestic_only),

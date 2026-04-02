@@ -7,6 +7,8 @@ const rankBtn = document.getElementById("rankBtn");
 const resetSearchBtn = document.getElementById("resetSearchBtn");
 const maxFlightTimeEl = document.getElementById("max-flight-time");
 const maxFlightTimeValueEl = document.getElementById("max-flight-time-value");
+const maxFlightCostEl = document.getElementById("max-flight-cost");
+const maxFlightCostValueEl = document.getElementById("max-flight-cost-value");
 const resultsListEl = document.getElementById("resultsList");
 const apiKeyInputEl = document.getElementById("apiKeyInput");
 const submitBtn = document.getElementById("submitBtn");
@@ -53,6 +55,7 @@ const DEFAULT_OUTPUT_TEXT = "API responses are now logged to the browser console
 const DEFAULT_RESULTS_HTML =
   '<p class="empty-results">Run combined ranking to see ranked airports.</p>';
 const DEFAULT_MAX_FLIGHT_TIME = Number(maxFlightTimeEl?.defaultValue || 6);
+const DEFAULT_MAX_FLIGHT_COST = Number(maxFlightCostEl?.defaultValue || 1000);
 
 let submittedApiKey = "";
 let hasSubmittedApiKey = false;
@@ -141,6 +144,7 @@ function saveUiState() {
     return_date: returnDateEl?.value || "",
     airports: selectedAirports,
     max_flight_time: Number(maxFlightTimeEl?.value || DEFAULT_MAX_FLIGHT_TIME),
+    max_flight_cost: Number(maxFlightCostEl?.value || DEFAULT_MAX_FLIGHT_COST),
     checked_ids: checkedIds,
   });
 }
@@ -236,6 +240,10 @@ function loadUiState() {
 
   if (maxFlightTimeEl && Number.isFinite(Number(state.max_flight_time))) {
     maxFlightTimeEl.value = String(Number(state.max_flight_time));
+  }
+
+  if (maxFlightCostEl && Number.isFinite(Number(state.max_flight_cost))) {
+    maxFlightCostEl.value = String(Number(state.max_flight_cost));
   }
 
   const checkedSet = new Set(Array.isArray(state.checked_ids) ? state.checked_ids : []);
@@ -714,6 +722,7 @@ function buildFiltersPayload() {
     conditions_preferences: getCheckedValues(CONDITIONS_OPTIONS),
     geography_preferences: getCheckedValues(GEOGRAPHY_OPTIONS),
     max_flight_time: Number(maxFlightTimeEl.value),
+    max_flight_cost: Number(maxFlightCostEl.value),
   };
 }
 
@@ -752,6 +761,13 @@ function resetTripFiltersAndResults() {
   }
   if (maxFlightTimeValueEl) {
     maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+  }
+
+  if (maxFlightCostEl) {
+    maxFlightCostEl.value = String(DEFAULT_MAX_FLIGHT_COST);
+  }
+  if (maxFlightCostValueEl) {
+    maxFlightCostValueEl.textContent = `$${maxFlightCostEl.value}`;
   }
 
   removeStorage(STORAGE_KEYS.ui);
@@ -879,6 +895,11 @@ maxFlightTimeEl.addEventListener("input", () => {
   handleUiStateChanged();
 });
 
+maxFlightCostEl.addEventListener("input", () => {
+  maxFlightCostValueEl.textContent = `$${maxFlightCostEl.value}`;
+  handleUiStateChanged();
+});
+
 WEATHER_ID_ORDER.forEach((id) => {
   const checkbox = document.getElementById(id);
   checkbox?.addEventListener("change", () => {
@@ -943,6 +964,7 @@ syncApiKeyUI();
 
 loadUiState();
 maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+maxFlightCostValueEl.textContent = `$${maxFlightCostEl.value}`;
 updatePayloadPreview();
 
 loadResultsState();

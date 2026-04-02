@@ -291,6 +291,13 @@ label {
   color: #1e3a8a;
 }
 
+#max-flight-cost-value {
+  min-width: 64px;
+  font-weight: 700;
+  color: #1e3a8a;
+  text-align: right;
+}
+
 .controls {
   display: flex;
   gap: 12px;
