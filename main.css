@@ -461,6 +461,30 @@ pre {
   color: #334155;
 }
 
+.flight-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.flight-row {
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px 10px;
+}
+
+.flight-route {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.flight-meta {
+  margin-top: 4px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
 .empty-results {
   margin: 0;
   color: #64748b;

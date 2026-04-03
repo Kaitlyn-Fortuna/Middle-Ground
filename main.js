@@ -641,15 +641,65 @@ function toPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+function toMoney(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A";
+  return `$${Math.round(value)}`;
+}
+
 function renderCombinedResults(data, { persist = true } = {}) {
   const rows = Array.isArray(data?.results) ? data.results : [];
   if (rows.length === 0) {
     resultsListEl.innerHTML = '<p class="empty-results">No results found for this filter set.</p>';
   } else {
     const firstRow = rows[0] || {};
+    const isDestinationCombinedResult =
+      Object.prototype.hasOwnProperty.call(firstRow, "destination_iata") &&
+      Object.prototype.hasOwnProperty.call(firstRow, "combined_score");
     const isAirportOnlyResult = Object.prototype.hasOwnProperty.call(firstRow, "iata_code");
 
-    resultsListEl.innerHTML = isAirportOnlyResult
+    resultsListEl.innerHTML = isDestinationCombinedResult
+      ? rows
+          .map((row) => {
+            const flights = Array.isArray(row.flights) ? row.flights : [];
+            const flightsHtml = flights.length
+              ? flights
+                  .map(
+                    (flight) => `
+                <div class="flight-row">
+                  <div class="flight-route">
+                    ${flight.departure_iata || "N/A"} → ${flight.arrival_iata || "N/A"} • Flight Rank #${flight.flight_rank ?? "N/A"}
+                  </div>
+                  <div class="flight-meta">
+                    ${flight.flight_iata || "N/A"} • ${flight.airline_iata || "N/A"} •
+                    Score ${toPercent(flight.percent_match)} • ${flight.duration_hours ?? "N/A"}h • ${toMoney(flight.estimated_cost_usd)}
+                  </div>
+                </div>
+              `
+                  )
+                  .join("")
+              : '<div class="flight-row"><div class="flight-meta">No flight rows for this destination.</div></div>';
+
+            return `
+          <article class="result-card">
+            <div class="result-head">
+              <div class="route">#${row.rank} ${row.destination_iata}${row.destination_name ? ` - ${row.destination_name}` : ""}</div>
+              <div class="score-total">Combined: ${toPercent(row.combined_score)}</div>
+            </div>
+            <div class="score-breakdown">
+              <span>Airport Rank: <strong>#${row.airport_rank ?? "N/A"}</strong></span>
+              <span>Airport Score: <strong>${toPercent(row.airport_score)}</strong></span>
+              <span>Flight Rank: <strong>${row.flight_rank ? `#${row.flight_rank}` : "N/A"}</strong></span>
+              <span>Flight Score: <strong>${toPercent(row.flight_score)}</strong></span>
+              <span>Combined Score: <strong>${toPercent(row.combined_score)}</strong></span>
+            </div>
+            <div class="flight-list">
+              ${flightsHtml}
+            </div>
+          </article>
+        `;
+          })
+          .join("")
+      : isAirportOnlyResult
       ? rows
           .map(
             (row) => `
@@ -914,6 +964,15 @@ WEATHER_ID_ORDER.forEach((id) => {
 });
 
 rankBtn.addEventListener("click", async () => {
+  if (!hasSubmittedApiKey || !submittedApiKey) {
+    const errorMessage = "Please submit an API key before optimizing travel.";
+    setOutput({ error: errorMessage });
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${errorMessage}</p>`;
+    persistedCombinedData = null;
+    saveResultsState();
+    return;
+  }
+
   const payload = buildFiltersPayload();
   console.log("[MiddleGround Request Payload]", payload);
   updatePayloadPreview();
@@ -924,6 +983,7 @@ rankBtn.addEventListener("click", async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-API-Key": submittedApiKey,
       },
       body: JSON.stringify(payload),
     });

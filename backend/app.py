@@ -14,6 +14,10 @@ from airportFiltering import (
     overall_rank,
     run_all_ranks,
 )
+from flightFiltering import (
+    MAX_DESTINATION_CANDIDATES,
+    build_combined_destination_rankings,
+)
 
 
 app = Flask(__name__)
@@ -120,6 +124,10 @@ def rank_airports():
 
 @app.post("/api/rank-combined")
 def rank_combined():
+    api_key = (request.headers.get("X-API-Key") or "").strip()
+    if not api_key:
+        return jsonify({"status": "error", "message": "Missing API key. Submit your API key from the website first."}), 400
+
     payload = request.get_json(silent=True)
     filters = parse_filters_api_json(payload)
 
@@ -135,21 +143,12 @@ def rank_combined():
         airports = import_airport_data()
         ranked_airports = initialize_ranked_airports(airports)
         airport_rank = overall_rank(run_all_ranks(ranked_airports, filters), filters)
-        limited_ranked = airport_rank.ranked[:limit]
-        limited_results = []
-
-        for idx, ranked_airport in enumerate(limited_ranked, start=1):
-            limited_results.append(
-                {
-                    "rank": idx,
-                    "iata_code": ranked_airport.airport.iata_code,
-                    "airport_name": ranked_airport.airport.name,
-                    "percent_match": round(ranked_airport.percent_match, 3)
-                    if ranked_airport.percent_match is not None
-                    else None,
-                    "scores": ranked_airport.scores,
-                }
-            )
+        combined = build_combined_destination_rankings(
+            airport_ranked=airport_rank.ranked,
+            filters=filters,
+            destination_candidate_limit=MAX_DESTINATION_CANDIDATES,
+        )
+        limited_results = combined["results"][:limit]
 
         return jsonify(
             {
@@ -158,9 +157,10 @@ def rank_combined():
                 "results": limited_results,
                 "active_score_keys": {
                     "airport": sorted(airport_rank.active_score_keys),
-                    "flight": [],
+                    "flight": combined["active_flight_score_keys"],
                 },
-                "message": "Flight ranking is currently disabled. Trip data is reserved for future flight ranking and does not affect airport ranking.",
+                "diagnostics": combined["diagnostics"],
+                "message": combined["message"],
             }
         )
     except Exception as exc:
