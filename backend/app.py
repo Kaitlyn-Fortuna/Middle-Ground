@@ -135,17 +135,7 @@ def rank_combined():
         airports = import_airport_data()
         ranked_airports = initialize_ranked_airports(airports)
         airport_rank = overall_rank(run_all_ranks(ranked_airports, filters), filters)
-        airport_results = airport_rank.ranked
-
-        if filters.airports:
-            selected_airports = {iata.upper() for iata in filters.airports}
-            airport_results = [
-                ranked
-                for ranked in airport_results
-                if ranked.airport.iata_code.upper() in selected_airports
-            ]
-
-        limited_ranked = airport_results[:limit]
+        limited_ranked = airport_rank.ranked[:limit]
         limited_results = []
 
         for idx, ranked_airport in enumerate(limited_ranked, start=1):
@@ -170,7 +160,7 @@ def rank_combined():
                     "airport": sorted(airport_rank.active_score_keys),
                     "flight": [],
                 },
-                "message": "Flight ranking is currently disabled. Combined ranking returns airport ranking only.",
+                "message": "Flight ranking is currently disabled. Trip data is reserved for future flight ranking and does not affect airport ranking.",
             }
         )
     except Exception as exc:
