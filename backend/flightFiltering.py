@@ -27,9 +27,7 @@ from airportFiltering import (
     LOW_HUMIDITY_THRESHOLD,
     HIGH_HUMIDITY_THRESHOLD,
     COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD,
-    COSTAL_GEOGRAPHY_MAX_DISTANCE,
     BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD,
-    BEACH_GEOGRAPHY_MAX_DISTANCE,
     URBAN_GEOGRAPHY_POPULATION_SOFT_CAP,
     MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD,
     MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD,
@@ -296,11 +294,14 @@ def _fetch_airport_metrics(
     }
 
 
-def _format_metric(value: Any, unit: str = "", digits: int = 1) -> str:
+def _format_metric(value: Any, unit: str = "", digits: int = 1, thousands: bool = False) -> str:
     if value is None:
         return "N/A"
     if isinstance(value, (int, float)):
-        formatted = f"{value:.{digits}f}" if isinstance(value, float) else str(value)
+        if isinstance(value, float):
+            formatted = f"{value:,.{digits}f}" if thousands else f"{value:.{digits}f}"
+        else:
+            formatted = f"{value:,d}" if thousands else str(value)
         return f"{formatted}{unit}" if unit else formatted
     return str(value)
 
@@ -314,7 +315,8 @@ def _build_temperature_target(weather_preferences: Optional[List[str]]) -> str:
     uppers = [TEMPERATURE_BANDS[item][1] for item in prefs]
     low_bound = min(lowers)
     high_bound = max(uppers)
-    return f"{low_bound:.1f}C to {high_bound:.1f}C ({'/'.join(prefs)})"
+    tags = "/".join(item.capitalize() for item in prefs)
+    return f"{low_bound:.1f}ºC to {high_bound:.1f}ºC ({tags})"
 
 
 def _build_airport_breakdown(
@@ -344,74 +346,74 @@ def _build_airport_breakdown(
     add_item(
         "temperature",
         "Temperature",
-        _format_metric(airport_metrics.get("weather_temperature_yearly_average"), "C"),
+        _format_metric(airport_metrics.get("weather_temperature_yearly_average"), "ºC"),
         _build_temperature_target(filters.weather_preferences),
     )
     add_item(
         "sunny",
         "Sun Hours",
         _format_metric(airport_metrics.get("weather_sun_yearly_average"), "h/day"),
-        f">= {SUNNDY_WEATHER_SUNNY_THRESHOLD:.1f}h/day",
+        f"≥ {SUNNDY_WEATHER_SUNNY_THRESHOLD:.1f}h/day",
     )
     add_item(
         "dry",
         "Precipitation",
         _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
-        f"Dry target: <= {DRY_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+        f"≤ {DRY_WEATHER_PRECIP_THRESHOLD:.1f}mm/day (Dry)",
     )
     add_item(
         "wet",
         "Precipitation",
         _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
-        f"Wet target: >= {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+        f"≥ {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day (Wet)",
     )
     add_item(
         "dry/wet",
         "Precipitation",
         _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
-        f"Dry <= {DRY_WEATHER_PRECIP_THRESHOLD:.1f} or Wet >= {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+        (
+            f"≤ {DRY_WEATHER_PRECIP_THRESHOLD:.1f}mm/day or "
+            f"≥ {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day (Dry/Wet)"
+        ),
     )
     add_item(
         "low humidity",
         "Humidity",
         _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
-        f"Low humidity <= {LOW_HUMIDITY_THRESHOLD:.0f}%",
+        f"≤ {LOW_HUMIDITY_THRESHOLD:.0f}% (Low Humidity)",
     )
     add_item(
         "high humidity",
         "Humidity",
         _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
-        f"High humidity >= {HIGH_HUMIDITY_THRESHOLD:.0f}%",
+        f"≥ {HIGH_HUMIDITY_THRESHOLD:.0f}% (High Humidity)",
     )
     add_item(
         "low/high humidity",
         "Humidity",
         _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
-        f"Low <= {LOW_HUMIDITY_THRESHOLD:.0f}% or High >= {HIGH_HUMIDITY_THRESHOLD:.0f}%",
+        (
+            f"≤ {LOW_HUMIDITY_THRESHOLD:.0f}% or "
+            f"≥ {HIGH_HUMIDITY_THRESHOLD:.0f}% (Low/High Humidity)"
+        ),
     )
     add_item(
         "coastal",
-        "Distance To Coast",
-        _format_metric(airport_metrics.get("coastal_distance"), "mi"),
-        (
-            f"Best <= {COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f}mi, "
-            f"falls to 0 near {COSTAL_GEOGRAPHY_MAX_DISTANCE:.0f}mi"
-        ),
+        "Coastal",
+        _format_metric(airport_metrics.get("coastal_distance"), " mi"),
+        f"≤ {COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f} mi to coast",
     )
     add_item(
         "beach",
-        "Distance To Beach",
-        _format_metric(airport_metrics.get("beach_distance"), "mi"),
-        (
-            f"Best <= {BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f}mi, "
-            f"falls to 0 near {BEACH_GEOGRAPHY_MAX_DISTANCE:.0f}mi"
-        ),
+        "Beach",
+        _format_metric(airport_metrics.get("beach_distance"), " mi"),
+        f"≤ {BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f} mi to beach",
     )
     add_item(
         "urban",
-        "Population",
-        _format_metric(airport_metrics.get("population")),
-        f"Closer to {URBAN_GEOGRAPHY_POPULATION_SOFT_CAP:,}+ is better",
+        "Urban",
+        _format_metric(airport_metrics.get("population"), thousands=True) + " people",
+        f"≥ {URBAN_GEOGRAPHY_POPULATION_SOFT_CAP:,} people",
     )
 
     if "mountainous" in airport_scores:
@@ -424,8 +426,8 @@ def _build_airport_breakdown(
                 "label": "Mountainous Terrain",
                 "actual": f"Relief {actual_relief}, Ruggedness {actual_stddev}",
                 "target": (
-                    f"Relief >= {MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD:.0f}m and "
-                    f"Ruggedness >= {MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD:.0f}m"
+                    f"Relief ≥ {MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD:.0f}m and "
+                    f"Ruggedness ≥ {MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD:.0f}m"
                 ),
                 "score": round(float(score_value), 3) if isinstance(score_value, (int, float)) else None,
             }

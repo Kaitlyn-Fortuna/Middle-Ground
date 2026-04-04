@@ -694,8 +694,31 @@ function renderDetailRow(label, value, extraClass = "") {
   `;
 }
 
+function renderFlightScoreCard(title, filterValue, actualValue, scoreValue) {
+  const filterText = toDisplayText(filterValue);
+  const actualText = toDisplayText(actualValue);
+  const hasScore = typeof scoreValue === "number" && Number.isFinite(scoreValue);
+  if (!filterText && !actualText && !hasScore) return "";
+
+  return `
+    <div class="flight-kv flight-score-card">
+      <div class="flight-score-head">
+        <span class="flight-score-title">${title}</span>
+        ${hasScore ? `<span class="airport-breakdown-score ${scoreToneClass(scoreValue)}">${toPercent(scoreValue)}</span>` : ""}
+      </div>
+      ${filterText ? `<div class="airport-breakdown-meta"><strong>Filter:</strong> ${filterText}</div>` : ""}
+      ${actualText ? `<div class="airport-breakdown-meta"><strong>Actual:</strong> ${actualText}</div>` : ""}
+    </div>
+  `;
+}
+
 function renderCombinedResults(data, { persist = true } = {}) {
   const rows = Array.isArray(data?.results) ? data.results : [];
+  const flightFilterContext = data?.diagnostics?.flight_filter_context || {};
+  const selectedOrigins = Array.isArray(data?.diagnostics?.selected_origin_airports)
+    ? data.diagnostics.selected_origin_airports
+    : [];
+  const flightLabel = selectedOrigins.length === 1 ? "Flight" : "Flights";
   if (rows.length === 0) {
     resultsListEl.innerHTML = '<p class="empty-results">No results found for this filter set.</p>';
   } else {
@@ -757,31 +780,36 @@ function renderCombinedResults(data, { persist = true } = {}) {
                       detailRows.push(renderDetailRow("Flight Code", flight.flight_iata));
                       detailRows.push(renderDetailRow("Departure", formatDateTime(flight.departure_scheduled)));
                       detailRows.push(renderDetailRow("Arrival", formatDateTime(flight.arrival_scheduled)));
+
+                      const maxTime =
+                        typeof flightFilterContext.max_flight_time === "number"
+                          ? flightFilterContext.max_flight_time
+                          : null;
+                      const maxCost =
+                        typeof flightFilterContext.max_flight_cost === "number"
+                          ? flightFilterContext.max_flight_cost
+                          : null;
+                      const timeScore =
+                        typeof flightScoreMap.flight_time === "number" ? flightScoreMap.flight_time : null;
+                      const costScore =
+                        typeof flightScoreMap.flight_cost === "number" ? flightScoreMap.flight_cost : null;
+
                       detailRows.push(
-                        renderDetailRow(
-                          "Flight Time",
-                          flight.duration_hours != null ? `${flight.duration_hours}h` : ""
+                        renderFlightScoreCard(
+                          "Time",
+                          maxTime !== null ? `≤ ${maxTime}h` : "",
+                          flight.duration_hours != null ? `${flight.duration_hours}h` : "",
+                          timeScore
                         )
                       );
-                      if (typeof flightScoreMap.flight_time === "number") {
-                        detailRows.push(
-                          renderDetailRow(
-                            "Flight Time Score",
-                            toPercent(flightScoreMap.flight_time),
-                            "flight-kv-score"
-                          )
-                        );
-                      }
-                      detailRows.push(renderDetailRow("Flight Cost", toMoney(flight.estimated_cost_usd)));
-                      if (typeof flightScoreMap.flight_cost === "number") {
-                        detailRows.push(
-                          renderDetailRow(
-                            "Flight Cost Score",
-                            toPercent(flightScoreMap.flight_cost),
-                            "flight-kv-score"
-                          )
-                        );
-                      }
+                      detailRows.push(
+                        renderFlightScoreCard(
+                          "Cost",
+                          maxCost !== null ? `≤ ${toMoney(maxCost)}` : "",
+                          toMoney(flight.estimated_cost_usd),
+                          costScore
+                        )
+                      );
                       const expandedHtml = detailRows.filter(Boolean).join("");
 
                       return `
@@ -810,8 +838,8 @@ function renderCombinedResults(data, { persist = true } = {}) {
               <div class="score-pill ${scoreToneClass(row.combined_score)}">${toPercent(row.combined_score)} Match</div>
             </div>
             <div class="score-breakdown compact">
-              <span class="metric-chip metric-airport ${scoreToneClass(row.airport_score)}">Airport Score #${row.airport_rank ?? "N/A"} | ${toPercent(row.airport_score)}</span>
-              <span class="metric-chip metric-flight ${scoreToneClass(row.flight_score)}">Flight Score #${row.flight_rank ?? "N/A"} | ${toPercent(row.flight_score)}</span>
+              <span class="metric-chip metric-airport ${scoreToneClass(row.airport_score)}">Airport #${row.airport_rank ?? "N/A"} | ${toPercent(row.airport_score)}</span>
+              <span class="metric-chip metric-flight ${scoreToneClass(row.flight_score)}">${flightLabel} #${row.flight_rank ?? "N/A"} | ${toPercent(row.flight_score)}</span>
               <span class="metric-chip metric-price">All-in ${toMoney(row.combined_price_usd)}</span>
             </div>
             ${airportBreakdownHtml}
