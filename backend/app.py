@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 import sqlite3
 
 from flask import Flask, jsonify, request
@@ -18,11 +19,20 @@ from flightFiltering import (
     MAX_DESTINATION_CANDIDATES,
     build_combined_destination_rankings,
 )
+from flightApiProvider import FlightApiError, FlightApiInputError
 
 
 app = Flask(__name__)
 BACKEND_DIR = Path(__file__).resolve().parent
 DATA_DIR = BACKEND_DIR.parent / "data"
+
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    )
+
+logger = logging.getLogger("middleground.backend")
 
 CORS(
     app,
@@ -70,6 +80,15 @@ def load_domestic_large_airports():
         ]
     finally:
         conn.close()
+
+
+def _mask_api_key(value: str) -> str:
+    cleaned = (value or "").strip()
+    if not cleaned:
+        return "<missing>"
+    if len(cleaned) <= 6:
+        return f"{cleaned[:1]}***{cleaned[-1:]}"
+    return f"{cleaned[:3]}***{cleaned[-3:]}"
 
 
 @app.get("/api/health")
@@ -130,6 +149,18 @@ def rank_combined():
 
     payload = request.get_json(silent=True)
     filters = parse_filters_api_json(payload)
+    logger.info(
+        "rank-combined:start api_key=%s origins=%s departure_date=%s return_date=%s weather=%s conditions=%s geography=%s max_flight_time=%s max_flight_cost=%s",
+        _mask_api_key(api_key),
+        len(filters.airports or []),
+        filters.departure_date,
+        filters.return_date,
+        filters.weather_preferences,
+        filters.conditions_preferences,
+        filters.geography_preferences,
+        filters.max_flight_time,
+        filters.max_flight_cost,
+    )
 
     limit_raw = request.args.get("limit")
     limit = 25
@@ -142,13 +173,32 @@ def rank_combined():
     try:
         airports = import_airport_data()
         ranked_airports = initialize_ranked_airports(airports)
+        logger.info("rank-combined:airport-ranking-start airport_count=%s", len(ranked_airports))
         airport_rank = overall_rank(run_all_ranks(ranked_airports, filters), filters)
+        logger.info(
+            "rank-combined:airport-ranking-complete active_score_keys=%s top10=%s",
+            sorted(airport_rank.active_score_keys),
+            [
+                {
+                    "iata_code": ranked.airport.iata_code,
+                    "percent_match": ranked.percent_match,
+                }
+                for ranked in airport_rank.ranked[:10]
+            ],
+        )
         combined = build_combined_destination_rankings(
             airport_ranked=airport_rank.ranked,
             filters=filters,
+            api_key=api_key,
             destination_candidate_limit=MAX_DESTINATION_CANDIDATES,
         )
         limited_results = combined["results"][:limit]
+        logger.info(
+            "rank-combined:done results=%s message=%s diagnostics=%s",
+            len(limited_results),
+            combined["message"],
+            combined["diagnostics"],
+        )
 
         return jsonify(
             {
@@ -163,7 +213,14 @@ def rank_combined():
                 "message": combined["message"],
             }
         )
+    except FlightApiInputError as exc:
+        logger.warning("rank-combined:input-error %s", exc)
+        return jsonify({"status": "error", "message": str(exc)}), 400
+    except FlightApiError as exc:
+        logger.error("rank-combined:provider-error %s", exc)
+        return jsonify({"status": "error", "message": str(exc)}), 502
     except Exception as exc:
+        logger.exception("rank-combined:unexpected-error")
         return jsonify({"status": "error", "message": str(exc)}), 500
 
 

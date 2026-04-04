@@ -5,6 +5,8 @@ from __future__ import annotations
 # ============================
 
 import json
+import logging
+import math
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
@@ -12,7 +14,10 @@ from datetime import date, datetime
 
 from parseResults import (
     Flight,
-    load_flights_dataset_json,
+)
+from flightApiProvider import (
+    FlightApiClient,
+    FlightApiInputError,
 )
 from parseFilters import (
     SearchFilters,
@@ -48,8 +53,8 @@ from models import (
 # ======== SCORING CONSTANTS =========
 # ====================================
 
-FAKE_RESULTS_PATH = Path(__file__).resolve().parent.parent / "data" / "results-test.json"
-MAX_DESTINATION_CANDIDATES = 5
+MAX_DESTINATION_CANDIDATES = 10
+logger = logging.getLogger("middleground.flightfilter")
 
 
 
@@ -127,7 +132,7 @@ def _stable_text_score_seed(value: str) -> int:
 
 
 def estimate_flight_cost_usd(flight: Flight, duration_hours: Optional[float]) -> int:
-    """Deterministic synthetic ticket-cost estimator used for local fake-data ranking."""
+    """Deterministic synthetic ticket-cost estimator used when fare data is unavailable."""
     normalized_duration = duration_hours if duration_hours is not None else 3.5
     route_text = f"{(flight.departure_iata or '').upper()}-{(flight.arrival_iata or '').upper()}"
     carrier_text = (flight.airline_iata or flight.flight_iata or "GEN").upper()
@@ -253,6 +258,90 @@ def _normalize_airports(codes: Optional[Iterable[str]]) -> List[str]:
         seen.add(cleaned)
         normalized.append(cleaned)
     return normalized
+
+
+def _has_airport_preference_filters(filters: SearchFilters) -> bool:
+    return bool(
+        filters.weather_preferences
+        or filters.conditions_preferences
+        or filters.geography_preferences
+    )
+
+
+def _fetch_population_map(
+    conn: sqlite3.Connection,
+    iata_codes: Iterable[str],
+) -> Dict[str, Optional[int]]:
+    normalized_codes = [code.strip().upper() for code in iata_codes if (code or "").strip()]
+    if not normalized_codes:
+        return {}
+
+    placeholders = ", ".join(["?"] * len(normalized_codes))
+    cursor = conn.cursor()
+    cursor.execute(
+        f"""
+        SELECT UPPER(TRIM(iata_code)) AS iata_code, population
+        FROM airport_data
+        WHERE UPPER(TRIM(iata_code)) IN ({placeholders})
+        """,
+        tuple(normalized_codes),
+    )
+
+    population_map: Dict[str, Optional[int]] = {}
+    for iata_code, population in cursor.fetchall():
+        population_map[str(iata_code).upper()] = int(population) if isinstance(population, (int, float)) else None
+    return population_map
+
+
+def _compute_popularity_score(population: Optional[int]) -> Optional[float]:
+    if population is None or population <= 0:
+        return None
+    if population >= URBAN_GEOGRAPHY_POPULATION_SOFT_CAP:
+        return 1.0
+    return max(0.0, math.log1p(population) / math.log1p(URBAN_GEOGRAPHY_POPULATION_SOFT_CAP))
+
+
+def _prepare_destination_airports(
+    airport_ranked: List[RankedAirport],
+    filters: SearchFilters,
+    conn: sqlite3.Connection,
+) -> Dict[str, Any]:
+    if _has_airport_preference_filters(filters):
+        return {
+            "mode": "filtered",
+            "ranked_airports": airport_ranked,
+            "display_score_map": {},
+            "population_map": {},
+        }
+
+    population_map = _fetch_population_map(
+        conn,
+        [ranked_airport.airport.iata_code for ranked_airport in airport_ranked],
+    )
+
+    enriched: List[Tuple[int, float, str, RankedAirport]] = []
+    display_score_map: Dict[str, Optional[float]] = {}
+    for ranked_airport in airport_ranked:
+        iata_code = ranked_airport.airport.iata_code.upper()
+        population = population_map.get(iata_code)
+        popularity_score = _compute_popularity_score(population)
+        display_score_map[iata_code] = popularity_score
+        enriched.append(
+            (
+                int(population) if isinstance(population, int) else -1,
+                float(popularity_score) if isinstance(popularity_score, (int, float)) else -1.0,
+                iata_code,
+                ranked_airport,
+            )
+        )
+
+    enriched.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+    return {
+        "mode": "population_fallback",
+        "ranked_airports": [item[3] for item in enriched],
+        "display_score_map": display_score_map,
+        "population_map": population_map,
+    }
 
 
 def _fetch_airport_metrics(
@@ -460,107 +549,184 @@ def _rank_route_flights(route_flights: List[Flight], filters: SearchFilters) -> 
 def build_combined_destination_rankings(
     airport_ranked: List[RankedAirport],
     filters: SearchFilters,
+    api_key: str,
     destination_candidate_limit: int = MAX_DESTINATION_CANDIDATES,
 ) -> Dict[str, Any]:
     origin_airports = _normalize_airports(filters.airports)
     ordered_origin_airports = sorted(origin_airports)
-    route_flights = load_flights_dataset_json(FAKE_RESULTS_PATH)
-    flights_by_route = _index_flights_by_route(route_flights)
+    if not ordered_origin_airports:
+        raise FlightApiInputError("Please select at least one origin airport before optimizing travel.")
+    if not filters.departure_date or not filters.return_date:
+        raise FlightApiInputError(
+            "Departure and return dates are required to optimize travel."
+        )
 
     destination_rows: List[Dict[str, Any]] = []
     excluded_destinations: List[Dict[str, Any]] = []
     skipped_origin_destinations: List[str] = []
     active_flight_score_keys: Set[str] = set()
     considered_destinations: List[str] = []
+    loaded_route_flights: List[Flight] = []
+    route_options_cache: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+    provider_diagnostics: Dict[str, Any] = {"provider": "flightapi"}
+    provider_warnings: List[str] = []
 
-    airport_rank_map = {
-        ranked_airport.airport.iata_code.upper(): index
-        for index, ranked_airport in enumerate(airport_ranked, start=1)
-    }
     target_destination_count = max(1, destination_candidate_limit)
     airport_conn = sqlite3.connect(DB_PATH)
 
     try:
-        for ranked_airport in airport_ranked:
-            destination_iata = ranked_airport.airport.iata_code.upper()
-            considered_destinations.append(destination_iata)
-            if destination_iata in origin_airports:
-                skipped_origin_destinations.append(destination_iata)
-                continue
+        destination_preparation = _prepare_destination_airports(airport_ranked, filters, airport_conn)
+        all_ranked_destination_airports = destination_preparation["ranked_airports"]
+        airport_ranking_mode = str(destination_preparation["mode"])
+        airport_display_score_map: Dict[str, Optional[float]] = destination_preparation["display_score_map"]
+        ranked_destination_airports = [
+            ranked_airport
+            for ranked_airport in all_ranked_destination_airports
+            if ranked_airport.airport.iata_code.upper() not in origin_airports
+        ]
+        initial_top_candidates = [
+            ranked_airport.airport.iata_code.upper()
+            for ranked_airport in ranked_destination_airports[:target_destination_count]
+        ]
 
-            missing_origins: List[str] = []
-            selected_flights: List[Dict[str, Any]] = []
+        logger.info(
+            "airport-ranking:complete airport_mode=%s target_results=%s initial_top_candidates=%s total_ranked_destinations=%s",
+            airport_ranking_mode,
+            target_destination_count,
+            initial_top_candidates,
+            len(ranked_destination_airports),
+        )
 
-            for origin_index, origin_iata in enumerate(ordered_origin_airports, start=1):
-                route_key = (origin_iata, destination_iata)
-                route_options = _rank_route_flights(flights_by_route.get(route_key, []), filters)
-                if not route_options:
-                    missing_origins.append(origin_iata)
+        airport_rank_map = {
+            ranked_airport.airport.iata_code.upper(): index
+            for index, ranked_airport in enumerate(ranked_destination_airports, start=1)
+        }
+
+        with FlightApiClient(api_key=api_key) as flight_api_client:
+            for ranked_airport in ranked_destination_airports:
+                destination_iata = ranked_airport.airport.iata_code.upper()
+                considered_destinations.append(destination_iata)
+                logger.info(
+                    "destination:consider iata=%s airport_mode=%s airport_rank=%s",
+                    destination_iata,
+                    airport_ranking_mode,
+                    airport_rank_map.get(destination_iata),
+                )
+
+                missing_origins: List[str] = []
+                selected_flights: List[Dict[str, Any]] = []
+
+                for origin_index, origin_iata in enumerate(ordered_origin_airports, start=1):
+                    route_key = (origin_iata, destination_iata)
+                    if route_key not in route_options_cache:
+                        route_flights = flight_api_client.load_route_flights(
+                            origin_iata=origin_iata,
+                            destination_iata=destination_iata,
+                            departure_date=filters.departure_date or "",
+                        )
+                        loaded_route_flights.extend(route_flights)
+                        route_options_cache[route_key] = _rank_route_flights(route_flights, filters)
+
+                    route_options = route_options_cache[route_key]
+                    if not route_options:
+                        missing_origins.append(origin_iata)
+                        logger.info(
+                            "destination:missing-origin destination=%s origin=%s",
+                            destination_iata,
+                            origin_iata,
+                        )
+                        break
+
+                    selected_option = dict(route_options[0])
+                    selected_option["option_count"] = len(route_options)
+                    selected_option["origin_slot"] = origin_index
+                    selected_flights.append(selected_option)
+                    active_flight_score_keys.update(selected_option["scores"].keys())
+
+                if ordered_origin_airports and missing_origins:
+                    excluded_destinations.append(
+                        {
+                            "destination_iata": destination_iata,
+                            "missing_origins": missing_origins,
+                        }
+                    )
+                    logger.info(
+                        "destination:excluded destination=%s missing_origins=%s",
+                        destination_iata,
+                        missing_origins,
+                    )
                     continue
 
-                selected_option = dict(route_options[0])
-                selected_option["option_count"] = len(route_options)
-                selected_option["origin_slot"] = origin_index
-                selected_flights.append(selected_option)
-                active_flight_score_keys.update(selected_option["scores"].keys())
+                # Keep flight rows in alphabetical-origin order so each traveler appears
+                # in a stable position across all destination cards.
+                selected_flights.sort(
+                    key=lambda item: (str(item.get("departure_iata") or ""), int(item.get("origin_slot", 999_999)))
+                )
+                for flight_rank, flight_row in enumerate(selected_flights, start=1):
+                    flight_row["flight_rank"] = flight_rank
 
-            if ordered_origin_airports and missing_origins:
-                excluded_destinations.append(
+                airport_score = (
+                    ranked_airport.percent_match
+                    if airport_ranking_mode == "filtered"
+                    else airport_display_score_map.get(destination_iata)
+                )
+                flight_scores = [
+                    float(item["percent_match"])
+                    for item in selected_flights
+                    if isinstance(item.get("percent_match"), (float, int))
+                ]
+                flight_score = (sum(flight_scores) / len(flight_scores)) if flight_scores else None
+                combined_price_usd = (
+                    sum(
+                        int(item["estimated_cost_usd"])
+                        for item in selected_flights
+                        if isinstance(item.get("estimated_cost_usd"), int)
+                    )
+                    if selected_flights
+                    else None
+                )
+
+                score_inputs = [
+                    score
+                    for score in (
+                        airport_score if airport_ranking_mode == "filtered" else None,
+                        flight_score,
+                    )
+                    if score is not None
+                ]
+                combined_score = (sum(score_inputs) / len(score_inputs)) if score_inputs else None
+
+                airport_scores = ranked_airport.scores or {}
+                airport_metrics = _fetch_airport_metrics(airport_conn, destination_iata)
+                airport_breakdown = _build_airport_breakdown(airport_scores, airport_metrics, filters)
+
+                destination_rows.append(
                     {
                         "destination_iata": destination_iata,
-                        "missing_origins": missing_origins,
+                        "destination_name": ranked_airport.airport.name,
+                        "airport_rank": airport_rank_map.get(destination_iata),
+                        "airport_score": _round_score(airport_score),
+                        "airport_scores": airport_scores,
+                        "airport_breakdown": airport_breakdown,
+                        "flight_score": _round_score(flight_score),
+                        "combined_score": _round_score(combined_score),
+                        "combined_price_usd": combined_price_usd,
+                        "flights": selected_flights,
                     }
                 )
-                continue
-
-            # Keep flight rows in alphabetical-origin order so each traveler appears
-            # in a stable position across all destination cards.
-            selected_flights.sort(
-                key=lambda item: (str(item.get("departure_iata") or ""), int(item.get("origin_slot", 999_999)))
-            )
-            for flight_rank, flight_row in enumerate(selected_flights, start=1):
-                flight_row["flight_rank"] = flight_rank
-
-            airport_score = ranked_airport.percent_match
-            flight_scores = [
-                float(item["percent_match"])
-                for item in selected_flights
-                if isinstance(item.get("percent_match"), (float, int))
-            ]
-            flight_score = (sum(flight_scores) / len(flight_scores)) if flight_scores else None
-            combined_price_usd = (
-                sum(
-                    int(item["estimated_cost_usd"])
-                    for item in selected_flights
-                    if isinstance(item.get("estimated_cost_usd"), int)
+                logger.info(
+                    "destination:accepted destination=%s airport_score=%s flight_score=%s combined_score=%s flights=%s",
+                    destination_iata,
+                    _round_score(airport_score),
+                    _round_score(flight_score),
+                    _round_score(combined_score),
+                    len(selected_flights),
                 )
-                if selected_flights
-                else None
-            )
+                if len(destination_rows) >= target_destination_count:
+                    break
 
-            score_inputs = [score for score in (airport_score, flight_score) if score is not None]
-            combined_score = (sum(score_inputs) / len(score_inputs)) if score_inputs else None
-
-            airport_scores = ranked_airport.scores or {}
-            airport_metrics = _fetch_airport_metrics(airport_conn, destination_iata)
-            airport_breakdown = _build_airport_breakdown(airport_scores, airport_metrics, filters)
-
-            destination_rows.append(
-                {
-                    "destination_iata": destination_iata,
-                    "destination_name": ranked_airport.airport.name,
-                    "airport_rank": airport_rank_map.get(destination_iata),
-                    "airport_score": _round_score(airport_score),
-                    "airport_scores": airport_scores,
-                    "airport_breakdown": airport_breakdown,
-                    "flight_score": _round_score(flight_score),
-                    "combined_score": _round_score(combined_score),
-                    "combined_price_usd": combined_price_usd,
-                    "flights": selected_flights,
-                }
-            )
-            if len(destination_rows) >= target_destination_count:
-                break
+            provider_diagnostics = dict(flight_api_client.diagnostics)
+            provider_warnings = list(flight_api_client.warnings)
     finally:
         airport_conn.close()
 
@@ -589,25 +755,41 @@ def build_combined_destination_rankings(
     if ordered_origin_airports and not destination_rows:
         message = (
             "No ranked destination had flights from every selected origin airport "
-            "in the local fake dataset."
+            "in the live FlightAPI results."
         )
-    elif not ordered_origin_airports:
-        message = (
-            "No origin airports selected, so this ranking reflects airport filters only. "
-            "Flight scoring is applied after origin airports are selected."
-        )
+    elif provider_warnings:
+        message = provider_warnings[0]
+
+    logger.info(
+        "combined-ranking:complete results=%s excluded=%s skipped_self=%s considered=%s message=%s",
+        len(destination_rows),
+        len(excluded_destinations),
+        len(skipped_origin_destinations),
+        len(considered_destinations),
+        message,
+    )
 
     return {
         "results": destination_rows,
         "active_flight_score_keys": sorted(active_flight_score_keys),
         "diagnostics": {
             "candidate_destination_limit": target_destination_count,
+            "initial_top_ranked_airport_candidates": initial_top_candidates,
             "candidate_destinations_considered": considered_destinations,
             "selected_origin_airports": origin_airports,
             "ordered_origin_airports": ordered_origin_airports,
+            "airport_ranking_mode": airport_ranking_mode,
             "skipped_origin_destinations": skipped_origin_destinations,
             "excluded_destinations_missing_origins": excluded_destinations,
-            "fake_flights_loaded": len(route_flights),
+            "flight_data_source": "flightapi",
+            "flight_price_source": "estimated",
+            "flight_price_note": (
+                "The connected FlightAPI tracking endpoints do not include ticket fares, "
+                "so cost-based ranking still uses the local estimator."
+            ),
+            "live_flights_loaded": len(loaded_route_flights),
+            "provider": provider_diagnostics,
+            "provider_warnings": provider_warnings,
             "flight_filter_context": {
                 "max_flight_time": filters.max_flight_time,
                 "max_flight_cost": filters.max_flight_cost,
@@ -713,8 +895,11 @@ if __name__ == "__main__":
     filters_data = load_filters_json(filters_path)
     parsed_filters = parse_filters_json(filters_data)
 
-    results_path = Path("data/results-test.json")
-    flights = load_flights_dataset_json(results_path)
+    try:
+        raise FlightApiInputError("Local manual test requires a live API key now.")
+    except FlightApiInputError as exc:
+        print(exc)
+        flights = []
 
     ranked_flights = initialize_ranked_flights(flights)
     ranked_flights = run_all_flight_ranks(ranked_flights, parsed_filters)

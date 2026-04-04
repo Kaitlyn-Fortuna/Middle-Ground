@@ -68,6 +68,30 @@ let highlightedAirportIndex = 0;
 
 let persistedOutputData = null;
 let persistedCombinedData = null;
+let isRankingInProgress = false;
+const DEFAULT_RANK_BUTTON_TEXT = rankBtn?.textContent?.trim() || "Optimize Travel";
+
+function summarizeHeaders(headersValue) {
+  const headers =
+    headersValue instanceof Headers
+      ? Object.fromEntries(headersValue.entries())
+      : headersValue && typeof headersValue === "object"
+      ? { ...headersValue }
+      : {};
+
+  if (typeof headers["X-API-Key"] === "string") {
+    headers["X-API-Key"] = "<submitted-in-ui>";
+  }
+  return headers;
+}
+
+function logFrontend(stage, details = undefined) {
+  if (details === undefined) {
+    console.log(`[MiddleGround] ${stage}`);
+    return;
+  }
+  console.log(`[MiddleGround] ${stage}`, details);
+}
 
 function readStorageJSON(key) {
   try {
@@ -606,6 +630,7 @@ async function loadAirportCatalog() {
 
   airportInputEl.disabled = true;
   airportInputEl.placeholder = "Loading airports...";
+  logFrontend("Loading airport catalog");
 
   try {
     const data = await callApi("/airports");
@@ -628,6 +653,7 @@ async function loadAirportCatalog() {
     airportInputEl.placeholder = airportCatalog.length
       ? "Type airport, IATA, or city..."
       : "No airports available";
+    logFrontend("Airport catalog loaded", { count: airportCatalog.length });
   } catch (error) {
     airportCatalog = [];
     airportInputEl.disabled = true;
@@ -712,6 +738,25 @@ function renderFlightScoreCard(title, filterValue, actualValue, scoreValue) {
   `;
 }
 
+function renderLoadingState(message = "Optimizing travel...") {
+  if (!resultsListEl) return;
+  resultsListEl.innerHTML = `
+    <div class="loading-results" role="status" aria-live="polite">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>${message}</span>
+    </div>
+  `;
+}
+
+function setRankButtonLoading(isLoading) {
+  if (!rankBtn) return;
+  isRankingInProgress = Boolean(isLoading);
+  rankBtn.disabled = isRankingInProgress;
+  rankBtn.classList.toggle("is-loading", isRankingInProgress);
+  rankBtn.setAttribute("aria-busy", isRankingInProgress ? "true" : "false");
+  rankBtn.textContent = isRankingInProgress ? "Optimizing..." : DEFAULT_RANK_BUTTON_TEXT;
+}
+
 function renderCombinedResults(data, { persist = true } = {}) {
   const rows = Array.isArray(data?.results) ? data.results : [];
   const flightFilterContext = data?.diagnostics?.flight_filter_context || {};
@@ -720,7 +765,12 @@ function renderCombinedResults(data, { persist = true } = {}) {
     : [];
   const flightLabel = selectedOrigins.length === 1 ? "Flight" : "Flights";
   if (rows.length === 0) {
-    resultsListEl.innerHTML = '<p class="empty-results">No results found for this filter set.</p>';
+    const emptyMessage = toDisplayText(data?.message) || "No results found for this filter set.";
+    logFrontend("No ranked results returned", {
+      message: emptyMessage,
+      diagnostics: data?.diagnostics || null,
+    });
+    resultsListEl.innerHTML = `<p class="empty-results">${emptyMessage}</p>`;
   } else {
     const firstRow = rows[0] || {};
     const isDestinationCombinedResult =
@@ -977,7 +1027,16 @@ function resetTripFiltersAndResults() {
 }
 
 async function callApi(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, options);
+  const url = `${API_BASE}${path}`;
+  const method = options.method || "GET";
+  logFrontend("API request start", {
+    method,
+    path,
+    headers: summarizeHeaders(options.headers),
+    body: typeof options.body === "string" ? options.body : options.body,
+  });
+
+  const res = await fetch(url, options);
   const rawBody = await res.text();
   let data = {};
   try {
@@ -986,7 +1045,21 @@ async function callApi(path, options = {}) {
     data = { message: rawBody || "Request failed" };
   }
 
+  logFrontend("API response received", {
+    method,
+    path,
+    status: res.status,
+    ok: res.ok,
+    data,
+  });
+
   if (!res.ok) {
+    logFrontend("API request failed", {
+      method,
+      path,
+      status: res.status,
+      data,
+    });
     throw new Error(data.message || data.error || "Request failed");
   }
 
@@ -994,6 +1067,7 @@ async function callApi(path, options = {}) {
 }
 
 healthBtn.addEventListener("click", async () => {
+  logFrontend("Health check requested");
   try {
     const data = await callApi("/health");
     setOutput(data);
@@ -1115,6 +1189,9 @@ WEATHER_ID_ORDER.forEach((id) => {
 });
 
 rankBtn.addEventListener("click", async () => {
+  if (isRankingInProgress) {
+    return;
+  }
   if (!hasSubmittedApiKey || !submittedApiKey) {
     const errorMessage = "Please submit an API key before optimizing travel.";
     setOutput({ error: errorMessage });
@@ -1124,13 +1201,53 @@ rankBtn.addEventListener("click", async () => {
     return;
   }
 
+  if (selectedAirports.length === 0) {
+    const errorMessage = "Please choose at least one origin airport before optimizing travel.";
+    setOutput({ error: errorMessage });
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${errorMessage}</p>`;
+    persistedCombinedData = null;
+    saveResultsState();
+    return;
+  }
+
+  if (!(departureDateEl?.value || "").trim()) {
+    const errorMessage = "Please choose a departure date before optimizing travel.";
+    setOutput({ error: errorMessage });
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${errorMessage}</p>`;
+    persistedCombinedData = null;
+    saveResultsState();
+    return;
+  }
+
+  if (!(returnDateEl?.value || "").trim()) {
+    const errorMessage = "Please choose a return date before optimizing travel.";
+    setOutput({ error: errorMessage });
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${errorMessage}</p>`;
+    persistedCombinedData = null;
+    saveResultsState();
+    return;
+  }
+
   const payload = buildFiltersPayload();
+  logFrontend("Optimize Travel requested", {
+    selected_airports: selectedAirports.map((airport) => airport.iata_code),
+    departure_date: payload.departure_date,
+    return_date: payload.return_date,
+    weather_preferences: payload.weather_preferences,
+    conditions_preferences: payload.conditions_preferences,
+    geography_preferences: payload.geography_preferences,
+    max_flight_time: payload.max_flight_time,
+    max_flight_cost: payload.max_flight_cost,
+  });
   console.log("[MiddleGround Request Payload]", payload);
   updatePayloadPreview();
   saveUiState();
+  setRankButtonLoading(true);
+  renderLoadingState();
+  logFrontend("Optimize Travel loading state shown");
 
   try {
-    const data = await callApi("/rank-combined?limit=25", {
+    const data = await callApi("/rank-combined?limit=10", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1139,12 +1256,22 @@ rankBtn.addEventListener("click", async () => {
       body: JSON.stringify(payload),
     });
     setOutput(data);
+    logFrontend("Optimize Travel results received", {
+      count: Array.isArray(data?.results) ? data.results.length : 0,
+      message: data?.message || null,
+      diagnostics: data?.diagnostics || null,
+    });
     renderCombinedResults(data);
+    logFrontend("Optimize Travel results rendered");
   } catch (error) {
+    logFrontend("Optimize Travel failed", { error: error.message });
     setOutput({ error: error.message });
     resultsListEl.innerHTML = `<p class="empty-results">Error: ${error.message}</p>`;
     persistedCombinedData = null;
     saveResultsState();
+  } finally {
+    setRankButtonLoading(false);
+    logFrontend("Optimize Travel loading state cleared");
   }
 });
 

@@ -335,6 +335,29 @@ button:active {
   transform: translateY(0);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.88;
+}
+
+button.is-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button.is-loading::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-top-color: #ffffff;
+  animation: spin 0.85s linear infinite;
+}
+
 .btn-secondary {
   background: #f8fafc;
   color: #1f2937;
@@ -419,6 +442,24 @@ pre {
   display: grid;
   gap: 10px;
   margin-top: 12px;
+}
+
+.loading-results {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(37, 99, 235, 0.22);
+  border-top-color: #2563eb;
+  animation: spin 0.85s linear infinite;
 }
 
 .result-card {
@@ -757,6 +798,12 @@ pre {
 .empty-results {
   margin: 0;
   color: #64748b;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .legend-panel h2 {
