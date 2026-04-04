@@ -652,11 +652,46 @@ function toMoney(value) {
   return USD_FORMATTER.format(Math.round(value));
 }
 
+function scoreToneLevel(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "na";
+  if (value >= 0.85) return "high";
+  if (value >= 0.65) return "mid";
+  return "low";
+}
+
 function scoreToneClass(value) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "score-na";
-  if (value >= 0.85) return "score-high";
-  if (value >= 0.65) return "score-mid";
-  return "score-low";
+  const level = scoreToneLevel(value);
+  return level === "na" ? "score-na" : `score-${level}`;
+}
+
+function toneClass(value) {
+  const level = scoreToneLevel(value);
+  return level === "na" ? "tone-na" : `tone-${level}`;
+}
+
+function formatDateTime(value) {
+  if (!value || typeof value !== "string") return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
+}
+
+function toDisplayText(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return String(value);
+}
+
+function renderDetailRow(label, value, extraClass = "") {
+  const text = toDisplayText(value);
+  if (!text) return "";
+  return `
+    <div class="flight-kv ${extraClass}">
+      <span class="flight-k">${label}</span>
+      <span class="flight-v">${text}</span>
+    </div>
+  `;
 }
 
 function renderCombinedResults(data, { persist = true } = {}) {
@@ -673,37 +708,113 @@ function renderCombinedResults(data, { persist = true } = {}) {
     resultsListEl.innerHTML = isDestinationCombinedResult
       ? rows
           .map((row) => {
-            const flights = Array.isArray(row.flights) ? row.flights : [];
-            const rankToneClass = `result-rank-${Math.min(Math.max(Number(row.rank) || 1, 1), 5)}`;
+            const flights = Array.isArray(row.flights)
+              ? [...row.flights].sort((a, b) =>
+                  String(a?.departure_iata || "").localeCompare(String(b?.departure_iata || ""))
+                )
+              : [];
+            const cardToneClass = toneClass(row.combined_score);
+            const airportBreakdownRows = Array.isArray(row.airport_breakdown)
+              ? row.airport_breakdown
+              : [];
+            const airportBreakdownHtml = airportBreakdownRows.length
+              ? `
+                <details class="airport-breakdown">
+                  <summary class="airport-breakdown-summary">Airport Score Breakdown</summary>
+                  <div class="airport-breakdown-grid">
+                    ${airportBreakdownRows
+                      .map((item) => {
+                        const scoreClass = scoreToneClass(item.score);
+                        const filterText = toDisplayText(item.target);
+                        const actualText = toDisplayText(item.actual);
+                        return `
+                          <div class="airport-breakdown-item">
+                            <div class="airport-breakdown-head">
+                              <span class="airport-breakdown-label">${toDisplayText(item.label) || "Metric"}</span>
+                              <span class="airport-breakdown-score ${scoreClass}">${toPercent(item.score)}</span>
+                            </div>
+                            ${filterText ? `<div class="airport-breakdown-meta"><strong>Filter:</strong> ${filterText}</div>` : ""}
+                            ${actualText ? `<div class="airport-breakdown-meta"><strong>Actual:</strong> ${actualText}</div>` : ""}
+                          </div>
+                        `;
+                      })
+                      .join("")}
+                  </div>
+                </details>
+              `
+              : "";
             const flightsHtml = flights.length
               ? flights
                   .map(
-                    (flight) => `
-                <div class="flight-row ${scoreToneClass(flight.percent_match)}">
-                  <div class="flight-route">
-                    ${flight.departure_iata || "N/A"} → ${flight.arrival_iata || "N/A"}
+                    (flight) => {
+                      const flightScoreMap = flight?.scores && typeof flight.scores === "object" ? flight.scores : {};
+                      const detailRows = [];
+                      const airlineLabel =
+                        flight.airline_name && flight.airline_iata
+                          ? `${flight.airline_name} (${flight.airline_iata})`
+                          : flight.airline_name || flight.airline_iata;
+                      detailRows.push(renderDetailRow("Airline", airlineLabel));
+                      detailRows.push(renderDetailRow("Flight Code", flight.flight_iata));
+                      detailRows.push(renderDetailRow("Departure", formatDateTime(flight.departure_scheduled)));
+                      detailRows.push(renderDetailRow("Arrival", formatDateTime(flight.arrival_scheduled)));
+                      detailRows.push(
+                        renderDetailRow(
+                          "Flight Time",
+                          flight.duration_hours != null ? `${flight.duration_hours}h` : ""
+                        )
+                      );
+                      if (typeof flightScoreMap.flight_time === "number") {
+                        detailRows.push(
+                          renderDetailRow(
+                            "Flight Time Score",
+                            toPercent(flightScoreMap.flight_time),
+                            "flight-kv-score"
+                          )
+                        );
+                      }
+                      detailRows.push(renderDetailRow("Flight Cost", toMoney(flight.estimated_cost_usd)));
+                      if (typeof flightScoreMap.flight_cost === "number") {
+                        detailRows.push(
+                          renderDetailRow(
+                            "Flight Cost Score",
+                            toPercent(flightScoreMap.flight_cost),
+                            "flight-kv-score"
+                          )
+                        );
+                      }
+                      const expandedHtml = detailRows.filter(Boolean).join("");
+
+                      return `
+                <details class="flight-row ${toneClass(flight.percent_match)}">
+                  <summary class="flight-summary">
+                    <span class="flight-route-wrap">
+                      <span class="flight-caret">▸</span>
+                      <span class="flight-route">${flight.departure_iata || "N/A"} → ${flight.arrival_iata || "N/A"}</span>
+                    </span>
+                    <span class="flight-score-pill ${scoreToneClass(flight.percent_match)}">FS ${toPercent(flight.percent_match)}</span>
+                  </summary>
+                  <div class="flight-expanded">
+                    ${expandedHtml || '<div class="flight-meta">No extra data available.</div>'}
                   </div>
-                  <div class="flight-meta">
-                    #${flight.flight_rank ?? "N/A"} • ${flight.flight_iata || "N/A"} • ${flight.airline_iata || "N/A"} • ${toPercent(flight.percent_match)} • ${flight.duration_hours ?? "N/A"}h • ${toMoney(flight.estimated_cost_usd)}
-                  </div>
-                </div>
+                </details>
               `
+                    }
                   )
                   .join("")
               : '<div class="flight-row"><div class="flight-meta">No flight rows for this destination.</div></div>';
 
             return `
-          <article class="result-card ${rankToneClass}">
+          <article class="result-card ${cardToneClass}">
             <div class="result-head">
               <div class="route">#${row.rank} ${row.destination_iata}${row.destination_name ? ` - ${row.destination_name}` : ""}</div>
-              <div class="score-pill ${scoreToneClass(row.combined_score)}">${toPercent(row.combined_score)}</div>
+              <div class="score-pill ${scoreToneClass(row.combined_score)}">${toPercent(row.combined_score)} Match</div>
             </div>
             <div class="score-breakdown compact">
-              <span class="metric-chip metric-airport ${scoreToneClass(row.airport_score)}">Apt #${row.airport_rank ?? "N/A"} · ${toPercent(row.airport_score)}</span>
-              <span class="metric-chip metric-flight ${scoreToneClass(row.flight_score)}">Flt #${row.flight_rank ?? "N/A"} · ${toPercent(row.flight_score)}</span>
-              <span class="metric-chip metric-total ${scoreToneClass(row.combined_score)}">Total ${toPercent(row.combined_score)}</span>
+              <span class="metric-chip metric-airport ${scoreToneClass(row.airport_score)}">Airport Score #${row.airport_rank ?? "N/A"} | ${toPercent(row.airport_score)}</span>
+              <span class="metric-chip metric-flight ${scoreToneClass(row.flight_score)}">Flight Score #${row.flight_rank ?? "N/A"} | ${toPercent(row.flight_score)}</span>
               <span class="metric-chip metric-price">All-in ${toMoney(row.combined_price_usd)}</span>
             </div>
+            ${airportBreakdownHtml}
             <div class="flight-list">
               ${flightsHtml}
             </div>

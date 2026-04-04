@@ -5,6 +5,7 @@ from __future__ import annotations
 # ============================
 
 import json
+import sqlite3
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from datetime import date, datetime
@@ -19,6 +20,20 @@ from parseFilters import (
     parse_filters_json,
 )
 from airportFiltering import (
+    TEMPERATURE_BANDS,
+    SUNNDY_WEATHER_SUNNY_THRESHOLD,
+    DRY_WEATHER_PRECIP_THRESHOLD,
+    WET_WEATHER_PRECIP_THRESHOLD,
+    LOW_HUMIDITY_THRESHOLD,
+    HIGH_HUMIDITY_THRESHOLD,
+    COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD,
+    COSTAL_GEOGRAPHY_MAX_DISTANCE,
+    BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD,
+    BEACH_GEOGRAPHY_MAX_DISTANCE,
+    URBAN_GEOGRAPHY_POPULATION_SOFT_CAP,
+    MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD,
+    MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD,
+    DB_PATH,
     RankedAirport,
     import_airport_data,
     initialize_ranked_airports,
@@ -194,7 +209,10 @@ def _score_flight(flight: Flight, filters: SearchFilters) -> Dict[str, Any]:
 
     return {
         "flight_iata": flight.flight_iata,
+        "flight_number": flight.raw_result.flight.number,
+        "flight_callsign": flight.raw_result.flight.icao,
         "airline_iata": flight.airline_iata,
+        "airline_name": flight.raw_result.airline.name,
         "flight_status": flight.flight_status,
         "flight_date": flight.flight_date,
         "departure_iata": (flight.departure_iata or "").upper() or None,
@@ -239,6 +257,183 @@ def _normalize_airports(codes: Optional[Iterable[str]]) -> List[str]:
     return normalized
 
 
+def _fetch_airport_metrics(
+    conn: sqlite3.Connection,
+    iata_code: str,
+) -> Optional[Dict[str, Any]]:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT
+            weather_temperature_yearly_average,
+            weather_sun_yearly_average,
+            weather_precip_yearly_average,
+            weather_humidity_yearly_average,
+            coastal_distance,
+            beach_distance,
+            population,
+            relief_value,
+            stddev_value
+        FROM airport_data
+        WHERE iata_code = ?
+        """,
+        (iata_code,),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        return None
+
+    return {
+        "weather_temperature_yearly_average": row[0],
+        "weather_sun_yearly_average": row[1],
+        "weather_precip_yearly_average": row[2],
+        "weather_humidity_yearly_average": row[3],
+        "coastal_distance": row[4],
+        "beach_distance": row[5],
+        "population": row[6],
+        "relief_value": row[7],
+        "stddev_value": row[8],
+    }
+
+
+def _format_metric(value: Any, unit: str = "", digits: int = 1) -> str:
+    if value is None:
+        return "N/A"
+    if isinstance(value, (int, float)):
+        formatted = f"{value:.{digits}f}" if isinstance(value, float) else str(value)
+        return f"{formatted}{unit}" if unit else formatted
+    return str(value)
+
+
+def _build_temperature_target(weather_preferences: Optional[List[str]]) -> str:
+    prefs = [item for item in (weather_preferences or []) if item in TEMPERATURE_BANDS]
+    if not prefs:
+        return "Any"
+
+    lowers = [TEMPERATURE_BANDS[item][0] for item in prefs]
+    uppers = [TEMPERATURE_BANDS[item][1] for item in prefs]
+    low_bound = min(lowers)
+    high_bound = max(uppers)
+    return f"{low_bound:.1f}C to {high_bound:.1f}C ({'/'.join(prefs)})"
+
+
+def _build_airport_breakdown(
+    airport_scores: Dict[str, float],
+    airport_metrics: Optional[Dict[str, Any]],
+    filters: SearchFilters,
+) -> List[Dict[str, Any]]:
+    if airport_metrics is None:
+        return []
+
+    breakdown: List[Dict[str, Any]] = []
+
+    def add_item(score_key: str, label: str, actual: str, target: str):
+        if score_key not in airport_scores:
+            return
+        score_value = airport_scores.get(score_key)
+        breakdown.append(
+            {
+                "key": score_key,
+                "label": label,
+                "actual": actual,
+                "target": target,
+                "score": round(float(score_value), 3) if isinstance(score_value, (int, float)) else None,
+            }
+        )
+
+    add_item(
+        "temperature",
+        "Temperature",
+        _format_metric(airport_metrics.get("weather_temperature_yearly_average"), "C"),
+        _build_temperature_target(filters.weather_preferences),
+    )
+    add_item(
+        "sunny",
+        "Sun Hours",
+        _format_metric(airport_metrics.get("weather_sun_yearly_average"), "h/day"),
+        f">= {SUNNDY_WEATHER_SUNNY_THRESHOLD:.1f}h/day",
+    )
+    add_item(
+        "dry",
+        "Precipitation",
+        _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
+        f"Dry target: <= {DRY_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+    )
+    add_item(
+        "wet",
+        "Precipitation",
+        _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
+        f"Wet target: >= {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+    )
+    add_item(
+        "dry/wet",
+        "Precipitation",
+        _format_metric(airport_metrics.get("weather_precip_yearly_average"), "mm/day"),
+        f"Dry <= {DRY_WEATHER_PRECIP_THRESHOLD:.1f} or Wet >= {WET_WEATHER_PRECIP_THRESHOLD:.1f}mm/day",
+    )
+    add_item(
+        "low humidity",
+        "Humidity",
+        _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
+        f"Low humidity <= {LOW_HUMIDITY_THRESHOLD:.0f}%",
+    )
+    add_item(
+        "high humidity",
+        "Humidity",
+        _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
+        f"High humidity >= {HIGH_HUMIDITY_THRESHOLD:.0f}%",
+    )
+    add_item(
+        "low/high humidity",
+        "Humidity",
+        _format_metric(airport_metrics.get("weather_humidity_yearly_average"), "%"),
+        f"Low <= {LOW_HUMIDITY_THRESHOLD:.0f}% or High >= {HIGH_HUMIDITY_THRESHOLD:.0f}%",
+    )
+    add_item(
+        "coastal",
+        "Distance To Coast",
+        _format_metric(airport_metrics.get("coastal_distance"), "mi"),
+        (
+            f"Best <= {COSTAL_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f}mi, "
+            f"falls to 0 near {COSTAL_GEOGRAPHY_MAX_DISTANCE:.0f}mi"
+        ),
+    )
+    add_item(
+        "beach",
+        "Distance To Beach",
+        _format_metric(airport_metrics.get("beach_distance"), "mi"),
+        (
+            f"Best <= {BEACH_GEOGRAPHY_PROXIMITY_THRESHOLD:.0f}mi, "
+            f"falls to 0 near {BEACH_GEOGRAPHY_MAX_DISTANCE:.0f}mi"
+        ),
+    )
+    add_item(
+        "urban",
+        "Population",
+        _format_metric(airport_metrics.get("population")),
+        f"Closer to {URBAN_GEOGRAPHY_POPULATION_SOFT_CAP:,}+ is better",
+    )
+
+    if "mountainous" in airport_scores:
+        actual_relief = _format_metric(airport_metrics.get("relief_value"), "m")
+        actual_stddev = _format_metric(airport_metrics.get("stddev_value"), "m")
+        score_value = airport_scores.get("mountainous")
+        breakdown.append(
+            {
+                "key": "mountainous",
+                "label": "Mountainous Terrain",
+                "actual": f"Relief {actual_relief}, Ruggedness {actual_stddev}",
+                "target": (
+                    f"Relief >= {MOUNTAIN_GEOGRAPHY_ELEVATION_THRESHOLD:.0f}m and "
+                    f"Ruggedness >= {MOUNTAIN_GEOGRAPHY_ELEVATION_SD_THRESHOLD:.0f}m"
+                ),
+                "score": round(float(score_value), 3) if isinstance(score_value, (int, float)) else None,
+            }
+        )
+
+    return breakdown
+
+
 def _index_flights_by_route(flights: List[Flight]) -> Dict[Tuple[str, str], List[Flight]]:
     routes: Dict[Tuple[str, str], List[Flight]] = {}
     for flight in flights:
@@ -266,6 +461,7 @@ def build_combined_destination_rankings(
     destination_candidate_limit: int = MAX_DESTINATION_CANDIDATES,
 ) -> Dict[str, Any]:
     origin_airports = _normalize_airports(filters.airports)
+    ordered_origin_airports = sorted(origin_airports)
     route_flights = load_flights_dataset_json(FAKE_RESULTS_PATH)
     flights_by_route = _index_flights_by_route(route_flights)
 
@@ -280,92 +476,91 @@ def build_combined_destination_rankings(
         for index, ranked_airport in enumerate(airport_ranked, start=1)
     }
     target_destination_count = max(1, destination_candidate_limit)
+    airport_conn = sqlite3.connect(DB_PATH)
 
-    for ranked_airport in airport_ranked:
-        destination_iata = ranked_airport.airport.iata_code.upper()
-        considered_destinations.append(destination_iata)
-        if destination_iata in origin_airports:
-            skipped_origin_destinations.append(destination_iata)
-            continue
-
-        missing_origins: List[str] = []
-        selected_flights: List[Dict[str, Any]] = []
-
-        for origin_iata in origin_airports:
-            route_key = (origin_iata, destination_iata)
-            route_options = _rank_route_flights(flights_by_route.get(route_key, []), filters)
-            if not route_options:
-                missing_origins.append(origin_iata)
+    try:
+        for ranked_airport in airport_ranked:
+            destination_iata = ranked_airport.airport.iata_code.upper()
+            considered_destinations.append(destination_iata)
+            if destination_iata in origin_airports:
+                skipped_origin_destinations.append(destination_iata)
                 continue
 
-            selected_option = dict(route_options[0])
-            selected_option["option_count"] = len(route_options)
-            selected_flights.append(selected_option)
-            active_flight_score_keys.update(selected_option["scores"].keys())
+            missing_origins: List[str] = []
+            selected_flights: List[Dict[str, Any]] = []
 
-        if origin_airports and missing_origins:
-            excluded_destinations.append(
+            for origin_index, origin_iata in enumerate(ordered_origin_airports, start=1):
+                route_key = (origin_iata, destination_iata)
+                route_options = _rank_route_flights(flights_by_route.get(route_key, []), filters)
+                if not route_options:
+                    missing_origins.append(origin_iata)
+                    continue
+
+                selected_option = dict(route_options[0])
+                selected_option["option_count"] = len(route_options)
+                selected_option["origin_slot"] = origin_index
+                selected_flights.append(selected_option)
+                active_flight_score_keys.update(selected_option["scores"].keys())
+
+            if ordered_origin_airports and missing_origins:
+                excluded_destinations.append(
+                    {
+                        "destination_iata": destination_iata,
+                        "missing_origins": missing_origins,
+                    }
+                )
+                continue
+
+            # Keep flight rows in alphabetical-origin order so each traveler appears
+            # in a stable position across all destination cards.
+            selected_flights.sort(
+                key=lambda item: (str(item.get("departure_iata") or ""), int(item.get("origin_slot", 999_999)))
+            )
+            for flight_rank, flight_row in enumerate(selected_flights, start=1):
+                flight_row["flight_rank"] = flight_rank
+
+            airport_score = ranked_airport.percent_match
+            flight_scores = [
+                float(item["percent_match"])
+                for item in selected_flights
+                if isinstance(item.get("percent_match"), (float, int))
+            ]
+            flight_score = (sum(flight_scores) / len(flight_scores)) if flight_scores else None
+            combined_price_usd = (
+                sum(
+                    int(item["estimated_cost_usd"])
+                    for item in selected_flights
+                    if isinstance(item.get("estimated_cost_usd"), int)
+                )
+                if selected_flights
+                else None
+            )
+
+            score_inputs = [score for score in (airport_score, flight_score) if score is not None]
+            combined_score = (sum(score_inputs) / len(score_inputs)) if score_inputs else None
+
+            airport_scores = ranked_airport.scores or {}
+            airport_metrics = _fetch_airport_metrics(airport_conn, destination_iata)
+            airport_breakdown = _build_airport_breakdown(airport_scores, airport_metrics, filters)
+
+            destination_rows.append(
                 {
                     "destination_iata": destination_iata,
-                    "missing_origins": missing_origins,
+                    "destination_name": ranked_airport.airport.name,
+                    "airport_rank": airport_rank_map.get(destination_iata),
+                    "airport_score": _round_score(airport_score),
+                    "airport_scores": airport_scores,
+                    "airport_breakdown": airport_breakdown,
+                    "flight_score": _round_score(flight_score),
+                    "combined_score": _round_score(combined_score),
+                    "combined_price_usd": combined_price_usd,
+                    "flights": selected_flights,
                 }
             )
-            continue
-
-        selected_flights.sort(
-            key=lambda item: (
-                float(item.get("percent_match", -1)),
-                -(
-                    float(item["duration_hours"])
-                    if isinstance(item.get("duration_hours"), (int, float))
-                    else float("inf")
-                ),
-                -(
-                    int(item["estimated_cost_usd"])
-                    if isinstance(item.get("estimated_cost_usd"), int)
-                    else 999_999
-                ),
-            ),
-            reverse=True,
-        )
-        for flight_rank, flight_row in enumerate(selected_flights, start=1):
-            flight_row["flight_rank"] = flight_rank
-
-        airport_score = ranked_airport.percent_match
-        flight_scores = [
-            float(item["percent_match"])
-            for item in selected_flights
-            if isinstance(item.get("percent_match"), (float, int))
-        ]
-        flight_score = (sum(flight_scores) / len(flight_scores)) if flight_scores else None
-        combined_price_usd = (
-            sum(
-                int(item["estimated_cost_usd"])
-                for item in selected_flights
-                if isinstance(item.get("estimated_cost_usd"), int)
-            )
-            if selected_flights
-            else None
-        )
-
-        score_inputs = [score for score in (airport_score, flight_score) if score is not None]
-        combined_score = (sum(score_inputs) / len(score_inputs)) if score_inputs else None
-
-        destination_rows.append(
-            {
-                "destination_iata": destination_iata,
-                "destination_name": ranked_airport.airport.name,
-                "airport_rank": airport_rank_map.get(destination_iata),
-                "airport_score": _round_score(airport_score),
-                "airport_scores": ranked_airport.scores or {},
-                "flight_score": _round_score(flight_score),
-                "combined_score": _round_score(combined_score),
-                "combined_price_usd": combined_price_usd,
-                "flights": selected_flights,
-            }
-        )
-        if len(destination_rows) >= target_destination_count:
-            break
+            if len(destination_rows) >= target_destination_count:
+                break
+    finally:
+        airport_conn.close()
 
     destination_rows.sort(
         key=lambda row: (
@@ -389,12 +584,12 @@ def build_combined_destination_rankings(
         row.setdefault("flight_rank", None)
 
     message: Optional[str] = None
-    if origin_airports and not destination_rows:
+    if ordered_origin_airports and not destination_rows:
         message = (
             "No ranked destination had flights from every selected origin airport "
             "in the local fake dataset."
         )
-    elif not origin_airports:
+    elif not ordered_origin_airports:
         message = (
             "No origin airports selected, so this ranking reflects airport filters only. "
             "Flight scoring is applied after origin airports are selected."
@@ -407,9 +602,16 @@ def build_combined_destination_rankings(
             "candidate_destination_limit": target_destination_count,
             "candidate_destinations_considered": considered_destinations,
             "selected_origin_airports": origin_airports,
+            "ordered_origin_airports": ordered_origin_airports,
             "skipped_origin_destinations": skipped_origin_destinations,
             "excluded_destinations_missing_origins": excluded_destinations,
             "fake_flights_loaded": len(route_flights),
+            "flight_filter_context": {
+                "max_flight_time": filters.max_flight_time,
+                "max_flight_cost": filters.max_flight_cost,
+                "departure_date": filters.departure_date,
+                "return_date": filters.return_date,
+            },
             "return_date": filters.return_date,
         },
         "message": message,
