@@ -17,6 +17,7 @@ from parseResults import (
 )
 from flightApiProvider import (
     FlightApiClient,
+    FlightApiError,
     FlightApiInputError,
 )
 from parseFilters import (
@@ -568,6 +569,7 @@ def build_combined_destination_rankings(
     considered_destinations: List[str] = []
     loaded_route_flights: List[Flight] = []
     route_options_cache: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+    route_errors: List[Dict[str, str]] = []
     provider_diagnostics: Dict[str, Any] = {"provider": "flightapi"}
     provider_warnings: List[str] = []
 
@@ -584,9 +586,10 @@ def build_combined_destination_rankings(
             for ranked_airport in all_ranked_destination_airports
             if ranked_airport.airport.iata_code.upper() not in origin_airports
         ]
+        top_destination_candidates = ranked_destination_airports[:target_destination_count]
         initial_top_candidates = [
             ranked_airport.airport.iata_code.upper()
-            for ranked_airport in ranked_destination_airports[:target_destination_count]
+            for ranked_airport in top_destination_candidates
         ]
 
         logger.info(
@@ -603,7 +606,7 @@ def build_combined_destination_rankings(
         }
 
         with FlightApiClient(api_key=api_key) as flight_api_client:
-            for ranked_airport in ranked_destination_airports:
+            for ranked_airport in top_destination_candidates:
                 destination_iata = ranked_airport.airport.iata_code.upper()
                 considered_destinations.append(destination_iata)
                 logger.info(
@@ -619,11 +622,31 @@ def build_combined_destination_rankings(
                 for origin_index, origin_iata in enumerate(ordered_origin_airports, start=1):
                     route_key = (origin_iata, destination_iata)
                     if route_key not in route_options_cache:
-                        route_flights = flight_api_client.load_route_flights(
-                            origin_iata=origin_iata,
-                            destination_iata=destination_iata,
-                            departure_date=filters.departure_date or "",
-                        )
+                        try:
+                            route_flights = flight_api_client.load_route_flights(
+                                origin_iata=origin_iata,
+                                destination_iata=destination_iata,
+                                departure_date=filters.departure_date or "",
+                            )
+                        except FlightApiError as exc:
+                            warning = (
+                                f"Route lookup failed for {origin_iata}->{destination_iata}: {exc}"
+                            )
+                            provider_warnings.append(warning)
+                            route_errors.append(
+                                {
+                                    "origin_iata": origin_iata,
+                                    "destination_iata": destination_iata,
+                                    "error": str(exc),
+                                }
+                            )
+                            logger.warning(
+                                "destination:route-error destination=%s origin=%s error=%s",
+                                destination_iata,
+                                origin_iata,
+                                exc,
+                            )
+                            route_flights = []
                         loaded_route_flights.extend(route_flights)
                         route_options_cache[route_key] = _rank_route_flights(route_flights, filters)
 
@@ -722,11 +745,10 @@ def build_combined_destination_rankings(
                     _round_score(combined_score),
                     len(selected_flights),
                 )
-                if len(destination_rows) >= target_destination_count:
-                    break
-
             provider_diagnostics = dict(flight_api_client.diagnostics)
-            provider_warnings = list(flight_api_client.warnings)
+            provider_warnings = list(
+                dict.fromkeys([*provider_warnings, *flight_api_client.warnings])
+            )
     finally:
         airport_conn.close()
 
@@ -753,10 +775,16 @@ def build_combined_destination_rankings(
 
     message: Optional[str] = None
     if ordered_origin_airports and not destination_rows:
-        message = (
-            "No ranked destination had flights from every selected origin airport "
-            "in the live FlightAPI results."
-        )
+        if provider_warnings:
+            message = (
+                "No ranked destination had flights from every selected origin airport. "
+                f"First provider warning: {provider_warnings[0]}"
+            )
+        else:
+            message = (
+                "No ranked destination had flights from every selected origin airport "
+                "in the live FlightAPI results."
+            )
     elif provider_warnings:
         message = provider_warnings[0]
 
@@ -790,6 +818,7 @@ def build_combined_destination_rankings(
             "live_flights_loaded": len(loaded_route_flights),
             "provider": provider_diagnostics,
             "provider_warnings": provider_warnings,
+            "route_errors": route_errors,
             "flight_filter_context": {
                 "max_flight_time": filters.max_flight_time,
                 "max_flight_cost": filters.max_flight_cost,

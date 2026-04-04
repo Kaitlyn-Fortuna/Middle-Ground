@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sqlite3
 from dataclasses import dataclass, field
@@ -260,9 +261,13 @@ class FlightApiClient:
         self.conn = sqlite3.connect(self.cache_db_path)
         self.conn.row_factory = sqlite3.Row
         self._ensure_cache_tables()
+        self.enable_flight_detail_enrichment = (
+            os.getenv("ENABLE_FLIGHT_DETAIL_ENRICHMENT", "0").strip().lower() in {"1", "true", "yes", "on"}
+        )
         self.diagnostics: Dict[str, Any] = {
             "provider": "flightapi",
             "cache_db_path": str(self.cache_db_path),
+            "flight_detail_enrichment_enabled": self.enable_flight_detail_enrichment,
             "route_requests": 0,
             "route_cache_hits": 0,
             "route_stale_hits": 0,
@@ -639,6 +644,15 @@ class FlightApiClient:
             self.warnings.append(
                 f"Unable to load detail for {cleaned_airline_code}{cleaned_flight_number}: {exc}"
             )
+            # Cache detail errors as empty payloads so repeated runs don't hammer
+            # the same failing detail endpoint for identical route legs.
+            self._store_cached_payload(
+                "flight_detail_cache",
+                cache_key,
+                cache_columns,
+                [],
+                timedelta(hours=DETAIL_CACHE_TTL_HOURS),
+            )
             logger.error(
                 "detail:error airline_code=%s flight_number=%s departure_date=%s departure_airport=%s error=%s",
                 cleaned_airline_code,
@@ -758,15 +772,17 @@ class FlightApiClient:
         lookup_flight_number = operated_flight_number or flight_number
         airline_code = marketing_airline_code
 
-        if not airline_code and lookup_airline_name:
-            airline_code = self.resolve_airline_code(lookup_airline_name)
+        detail_bundle = None
+        if self.enable_flight_detail_enrichment:
+            if not airline_code and lookup_airline_name:
+                airline_code = self.resolve_airline_code(lookup_airline_name)
 
-        detail_bundle = self.fetch_flight_detail(
-            airline_code=airline_code,
-            flight_number=lookup_flight_number,
-            departure_date=departure_date,
-            departure_airport=origin_iata,
-        )
+            detail_bundle = self.fetch_flight_detail(
+                airline_code=airline_code,
+                flight_number=lookup_flight_number,
+                departure_date=departure_date,
+                departure_airport=origin_iata,
+            )
 
         departure_detail = _pick_dict(detail_bundle, "departure") if detail_bundle else None
         arrival_detail = _pick_dict(detail_bundle, "arrival") if detail_bundle else None

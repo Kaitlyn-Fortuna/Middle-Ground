@@ -702,6 +702,28 @@ function formatDateTime(value) {
   return parsed.toLocaleString();
 }
 
+function formatDurationHours(value) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return "";
+  const totalMinutes = Math.round(value * 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  if (hours > 0) {
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
+  }
+  return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+}
+
+function formatHoursLabel(value) {
+  if (value === null || value === undefined) return "";
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "";
+  return `${num} hour${num === 1 ? "" : "s"}`;
+}
+
 function toDisplayText(value) {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value.trim();
@@ -847,8 +869,8 @@ function renderCombinedResults(data, { persist = true } = {}) {
                       detailRows.push(
                         renderFlightScoreCard(
                           "Time",
-                          maxTime !== null ? `≤ ${maxTime}h` : "",
-                          flight.duration_hours != null ? `${flight.duration_hours}h` : "",
+                          maxTime !== null ? `≤ ${formatHoursLabel(maxTime)}` : "",
+                          formatDurationHours(flight.duration_hours),
                           timeScore
                         )
                       );
@@ -1011,7 +1033,7 @@ function resetTripFiltersAndResults() {
     maxFlightTimeEl.value = String(DEFAULT_MAX_FLIGHT_TIME);
   }
   if (maxFlightTimeValueEl) {
-    maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+    maxFlightTimeValueEl.textContent = formatHoursLabel(maxFlightTimeEl.value);
   }
 
   if (maxFlightCostEl) {
@@ -1166,7 +1188,7 @@ airportChipsEl?.addEventListener("click", (event) => {
 });
 
 maxFlightTimeEl.addEventListener("input", () => {
-  maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+  maxFlightTimeValueEl.textContent = formatHoursLabel(maxFlightTimeEl.value);
   handleUiStateChanged();
 });
 
@@ -1301,7 +1323,7 @@ loadApiKeyState();
 syncApiKeyUI();
 
 loadUiState();
-maxFlightTimeValueEl.textContent = `${maxFlightTimeEl.value}h`;
+maxFlightTimeValueEl.textContent = formatHoursLabel(maxFlightTimeEl.value);
 maxFlightCostValueEl.textContent = `$${maxFlightCostEl.value}`;
 updatePayloadPreview();
 
