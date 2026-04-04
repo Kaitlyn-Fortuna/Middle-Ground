@@ -125,6 +125,38 @@
           <p class="empty-results">Run combined ranking to see ranked airports.</p>
         </div>
       </section>
+
+      <section class="panel legend-panel">
+        <h2>Legend</h2>
+        <div class="legend-grid">
+          <div class="legend-block">
+            <h3>Labels</h3>
+            <div class="legend-line"><strong>Apt</strong><span>Airport score/rank</span></div>
+            <div class="legend-line"><strong>Flt</strong><span>Flight score/rank</span></div>
+            <div class="legend-line"><strong>Total</strong><span>Combined destination score</span></div>
+            <div class="legend-line"><strong>All-in</strong><span>Total price across the group</span></div>
+            <div class="legend-line"><strong>#</strong><span>Rank number (lower is better)</span></div>
+            <div class="legend-line"><strong>→</strong><span>Origin to destination route</span></div>
+          </div>
+
+          <div class="legend-block">
+            <h3>Score Colors</h3>
+            <div class="legend-line"><span class="legend-swatch swatch-high"></span><span>Green = strong match (85%+)</span></div>
+            <div class="legend-line"><span class="legend-swatch swatch-mid"></span><span>Blue = medium match (65-84%)</span></div>
+            <div class="legend-line"><span class="legend-swatch swatch-low"></span><span>Orange = lower match (&lt;65%)</span></div>
+            <div class="legend-line"><span class="legend-swatch swatch-na"></span><span>Gray = no score / not available</span></div>
+          </div>
+
+          <div class="legend-block">
+            <h3>Card Color</h3>
+            <div class="legend-line"><span class="legend-rank rank-1"></span><span>#1 result card</span></div>
+            <div class="legend-line"><span class="legend-rank rank-2"></span><span>#2 result card</span></div>
+            <div class="legend-line"><span class="legend-rank rank-3"></span><span>#3 result card</span></div>
+            <div class="legend-line"><span class="legend-rank rank-4"></span><span>#4 result card</span></div>
+            <div class="legend-line"><span class="legend-rank rank-5"></span><span>#5 result card</span></div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script type="module" src="main.js"></script>

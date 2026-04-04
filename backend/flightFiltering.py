@@ -251,36 +251,6 @@ def _index_flights_by_route(flights: List[Flight]) -> Dict[Tuple[str, str], List
     return routes
 
 
-def _build_no_flight_required_option(
-    origin_iata: str,
-    destination_iata: str,
-    filters: SearchFilters,
-) -> Dict[str, Any]:
-    scores: Dict[str, float] = {}
-    if filters.max_flight_time is not None:
-        scores["flight_time"] = 1.0
-    if filters.max_flight_cost is not None:
-        scores["flight_cost"] = 1.0
-    if filters.departure_date is not None:
-        scores["departure_date"] = 1.0
-
-    return {
-        "rank": 1,
-        "flight_iata": "NO-FLIGHT",
-        "airline_iata": None,
-        "flight_status": "not_required",
-        "flight_date": None,
-        "departure_iata": origin_iata,
-        "arrival_iata": destination_iata,
-        "departure_scheduled": None,
-        "arrival_scheduled": None,
-        "duration_hours": 0.0,
-        "estimated_cost_usd": 0,
-        "percent_match": 1.0,
-        "scores": scores,
-    }
-
-
 def _rank_route_flights(route_flights: List[Flight], filters: SearchFilters) -> List[Dict[str, Any]]:
     scored_options = [_score_flight(flight, filters) for flight in route_flights]
     scored_options.sort(key=_route_sort_tuple, reverse=True)
@@ -301,6 +271,7 @@ def build_combined_destination_rankings(
 
     destination_rows: List[Dict[str, Any]] = []
     excluded_destinations: List[Dict[str, Any]] = []
+    skipped_origin_destinations: List[str] = []
     active_flight_score_keys: Set[str] = set()
     considered_destinations: List[str] = []
 
@@ -313,17 +284,14 @@ def build_combined_destination_rankings(
     for ranked_airport in airport_ranked:
         destination_iata = ranked_airport.airport.iata_code.upper()
         considered_destinations.append(destination_iata)
+        if destination_iata in origin_airports:
+            skipped_origin_destinations.append(destination_iata)
+            continue
 
         missing_origins: List[str] = []
         selected_flights: List[Dict[str, Any]] = []
 
         for origin_iata in origin_airports:
-            if origin_iata == destination_iata:
-                selected_option = _build_no_flight_required_option(origin_iata, destination_iata, filters)
-                selected_flights.append(selected_option)
-                active_flight_score_keys.update(selected_option["scores"].keys())
-                continue
-
             route_key = (origin_iata, destination_iata)
             route_options = _rank_route_flights(flights_by_route.get(route_key, []), filters)
             if not route_options:
@@ -370,6 +338,15 @@ def build_combined_destination_rankings(
             if isinstance(item.get("percent_match"), (float, int))
         ]
         flight_score = (sum(flight_scores) / len(flight_scores)) if flight_scores else None
+        combined_price_usd = (
+            sum(
+                int(item["estimated_cost_usd"])
+                for item in selected_flights
+                if isinstance(item.get("estimated_cost_usd"), int)
+            )
+            if selected_flights
+            else None
+        )
 
         score_inputs = [score for score in (airport_score, flight_score) if score is not None]
         combined_score = (sum(score_inputs) / len(score_inputs)) if score_inputs else None
@@ -383,6 +360,7 @@ def build_combined_destination_rankings(
                 "airport_scores": ranked_airport.scores or {},
                 "flight_score": _round_score(flight_score),
                 "combined_score": _round_score(combined_score),
+                "combined_price_usd": combined_price_usd,
                 "flights": selected_flights,
             }
         )
@@ -429,6 +407,7 @@ def build_combined_destination_rankings(
             "candidate_destination_limit": target_destination_count,
             "candidate_destinations_considered": considered_destinations,
             "selected_origin_airports": origin_airports,
+            "skipped_origin_destinations": skipped_origin_destinations,
             "excluded_destinations_missing_origins": excluded_destinations,
             "fake_flights_loaded": len(route_flights),
             "return_date": filters.return_date,

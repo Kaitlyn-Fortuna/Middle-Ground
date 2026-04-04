@@ -428,6 +428,31 @@ pre {
   padding: 12px 14px;
 }
 
+.result-card.result-rank-1 {
+  border-color: #22c55e;
+  background: linear-gradient(180deg, #f7fff9 0%, #f8fafc 100%);
+}
+
+.result-card.result-rank-2 {
+  border-color: #0ea5e9;
+  background: linear-gradient(180deg, #f3fbff 0%, #f8fafc 100%);
+}
+
+.result-card.result-rank-3 {
+  border-color: #a78bfa;
+  background: linear-gradient(180deg, #f8f5ff 0%, #f8fafc 100%);
+}
+
+.result-card.result-rank-4 {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #fffaf0 0%, #f8fafc 100%);
+}
+
+.result-card.result-rank-5 {
+  border-color: #f97316;
+  background: linear-gradient(180deg, #fff7f2 0%, #f8fafc 100%);
+}
+
 .result-head {
   display: flex;
   justify-content: space-between;
@@ -446,6 +471,15 @@ pre {
   color: #1d4ed8;
 }
 
+.score-pill {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border: 1px solid #dbe3ef;
+  background: #ffffff;
+}
+
 .meta {
   margin-top: 6px;
   color: #475569;
@@ -461,6 +495,61 @@ pre {
   color: #334155;
 }
 
+.score-breakdown.compact {
+  gap: 8px;
+}
+
+.metric-chip {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1px solid #dbe3ef;
+  background: #ffffff;
+  color: #334155;
+}
+
+.metric-airport {
+  border-color: #bfdbfe;
+}
+
+.metric-flight {
+  border-color: #bae6fd;
+}
+
+.metric-total {
+  border-color: #d8b4fe;
+}
+
+.metric-price {
+  border-color: #fbcfe8;
+  color: #9d174d;
+}
+
+.score-high {
+  background: #ecfdf3;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.score-mid {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.score-low {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+
+.score-na {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
 .flight-list {
   margin-top: 10px;
   display: grid;
@@ -472,6 +561,27 @@ pre {
   border-radius: 10px;
   background: #ffffff;
   padding: 8px 10px;
+}
+
+.flight-row.score-high {
+  background: #ffffff;
+  border-color: #dbe3ef;
+  color: inherit;
+  border-left: 4px solid #22c55e;
+}
+
+.flight-row.score-mid {
+  background: #ffffff;
+  border-color: #dbe3ef;
+  color: inherit;
+  border-left: 4px solid #3b82f6;
+}
+
+.flight-row.score-low {
+  background: #ffffff;
+  border-color: #dbe3ef;
+  color: inherit;
+  border-left: 4px solid #f97316;
 }
 
 .flight-route {
@@ -490,6 +600,101 @@ pre {
   color: #64748b;
 }
 
+.legend-panel h2 {
+  margin-bottom: 10px;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.legend-block {
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px;
+}
+
+.legend-block h3 {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+}
+
+.legend-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #334155;
+}
+
+.legend-line + .legend-line {
+  margin-top: 5px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  flex: 0 0 auto;
+}
+
+.swatch-high {
+  background: #ecfdf3;
+  border-color: #86efac;
+}
+
+.swatch-mid {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.swatch-low {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.swatch-na {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.legend-rank {
+  width: 20px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid #dbe3ef;
+  flex: 0 0 auto;
+}
+
+.legend-rank.rank-1 {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+
+.legend-rank.rank-2 {
+  background: #e0f2fe;
+  border-color: #0ea5e9;
+}
+
+.legend-rank.rank-3 {
+  background: #f3e8ff;
+  border-color: #a78bfa;
+}
+
+.legend-rank.rank-4 {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.legend-rank.rank-5 {
+  background: #ffedd5;
+  border-color: #f97316;
+}
+
 .hidden {
   display: none;
 }
@@ -500,6 +705,10 @@ pre {
   }
 
   .trip-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legend-grid {
     grid-template-columns: 1fr;
   }
 

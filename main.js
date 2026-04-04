@@ -641,9 +641,22 @@ function toPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+const USD_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
 function toMoney(value) {
   if (typeof value !== "number" || !Number.isFinite(value)) return "N/A";
-  return `$${Math.round(value)}`;
+  return USD_FORMATTER.format(Math.round(value));
+}
+
+function scoreToneClass(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "score-na";
+  if (value >= 0.85) return "score-high";
+  if (value >= 0.65) return "score-mid";
+  return "score-low";
 }
 
 function renderCombinedResults(data, { persist = true } = {}) {
@@ -661,17 +674,17 @@ function renderCombinedResults(data, { persist = true } = {}) {
       ? rows
           .map((row) => {
             const flights = Array.isArray(row.flights) ? row.flights : [];
+            const rankToneClass = `result-rank-${Math.min(Math.max(Number(row.rank) || 1, 1), 5)}`;
             const flightsHtml = flights.length
               ? flights
                   .map(
                     (flight) => `
-                <div class="flight-row">
+                <div class="flight-row ${scoreToneClass(flight.percent_match)}">
                   <div class="flight-route">
-                    ${flight.departure_iata || "N/A"} → ${flight.arrival_iata || "N/A"} • Flight Rank #${flight.flight_rank ?? "N/A"}
+                    ${flight.departure_iata || "N/A"} → ${flight.arrival_iata || "N/A"}
                   </div>
                   <div class="flight-meta">
-                    ${flight.flight_iata || "N/A"} • ${flight.airline_iata || "N/A"} •
-                    Score ${toPercent(flight.percent_match)} • ${flight.duration_hours ?? "N/A"}h • ${toMoney(flight.estimated_cost_usd)}
+                    #${flight.flight_rank ?? "N/A"} • ${flight.flight_iata || "N/A"} • ${flight.airline_iata || "N/A"} • ${toPercent(flight.percent_match)} • ${flight.duration_hours ?? "N/A"}h • ${toMoney(flight.estimated_cost_usd)}
                   </div>
                 </div>
               `
@@ -680,17 +693,16 @@ function renderCombinedResults(data, { persist = true } = {}) {
               : '<div class="flight-row"><div class="flight-meta">No flight rows for this destination.</div></div>';
 
             return `
-          <article class="result-card">
+          <article class="result-card ${rankToneClass}">
             <div class="result-head">
               <div class="route">#${row.rank} ${row.destination_iata}${row.destination_name ? ` - ${row.destination_name}` : ""}</div>
-              <div class="score-total">Combined: ${toPercent(row.combined_score)}</div>
+              <div class="score-pill ${scoreToneClass(row.combined_score)}">${toPercent(row.combined_score)}</div>
             </div>
-            <div class="score-breakdown">
-              <span>Airport Rank: <strong>#${row.airport_rank ?? "N/A"}</strong></span>
-              <span>Airport Score: <strong>${toPercent(row.airport_score)}</strong></span>
-              <span>Flight Rank: <strong>${row.flight_rank ? `#${row.flight_rank}` : "N/A"}</strong></span>
-              <span>Flight Score: <strong>${toPercent(row.flight_score)}</strong></span>
-              <span>Combined Score: <strong>${toPercent(row.combined_score)}</strong></span>
+            <div class="score-breakdown compact">
+              <span class="metric-chip metric-airport ${scoreToneClass(row.airport_score)}">Apt #${row.airport_rank ?? "N/A"} · ${toPercent(row.airport_score)}</span>
+              <span class="metric-chip metric-flight ${scoreToneClass(row.flight_score)}">Flt #${row.flight_rank ?? "N/A"} · ${toPercent(row.flight_score)}</span>
+              <span class="metric-chip metric-total ${scoreToneClass(row.combined_score)}">Total ${toPercent(row.combined_score)}</span>
+              <span class="metric-chip metric-price">All-in ${toMoney(row.combined_price_usd)}</span>
             </div>
             <div class="flight-list">
               ${flightsHtml}
