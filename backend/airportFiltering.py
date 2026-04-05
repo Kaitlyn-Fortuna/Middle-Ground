@@ -6,17 +6,12 @@ from __future__ import annotations
 
 import math
 import sqlite3
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Callable
 
-from parseFilters import (
-    SearchFilters, 
-    load_filters_json, 
-    parse_filters_json
-)
 from models import (
     Airport, 
+    SearchFilters,
     RankedAirport, 
     RankResult
 )
@@ -503,24 +498,3 @@ def format_rank_results(rank_result: RankResult, limit: Optional[int] = None) ->
         })
 
     return formatted_results
-
-
-
-
-# =======================================
-# =========== LOCAL TESTING =============
-# =======================================
-
-if __name__ == "__main__":
-    filters_path = Path("data/filters-test.json")
-    filters_data = load_filters_json(filters_path)
-    parsed_filters = parse_filters_json(filters_data)
-    
-    airports = import_airport_data()
-    ranked_airports = initialize_ranked_airports(airports)
-
-    final_rank = overall_rank(run_all_ranks(ranked_airports, parsed_filters), parsed_filters)
-    print(f"Final overall rank of {len(final_rank.ranked)} airports:")
-    for idx, ranked in enumerate(final_rank.ranked[:25], start=1):  # Print the first 25 ranked airports
-        percent_text = f"{ranked.percent_match:.3f}" if ranked.percent_match is not None else "N/A"
-        print(f"{idx} | {ranked.airport.iata_code} | {ranked.airport.name} | {percent_text}")

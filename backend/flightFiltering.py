@@ -4,26 +4,16 @@ from __future__ import annotations
 # ======== IMPORTS ===========
 # ============================
 
-import json
 import logging
 import math
 import sqlite3
-from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from datetime import date, datetime
 
-from parseResults import (
-    Flight,
-)
 from flightApiProvider import (
     FlightApiClient,
     FlightApiError,
     FlightApiInputError,
-)
-from parseFilters import (
-    SearchFilters,
-    load_filters_json,
-    parse_filters_json,
 )
 from airportFiltering import (
     TEMPERATURE_BANDS,
@@ -45,6 +35,8 @@ from airportFiltering import (
     run_all_ranks,
 )
 from models import (
+    Flight,
+    SearchFilters,
     FlightRankResult, 
     RankedFlight
 )
@@ -55,6 +47,7 @@ from models import (
 # ====================================
 
 MAX_DESTINATION_CANDIDATES = 10
+MIN_COMBINED_RESULTS_TARGET = 5
 logger = logging.getLogger("middleground.flightfilter")
 
 
@@ -574,6 +567,7 @@ def build_combined_destination_rankings(
     provider_warnings: List[str] = []
 
     target_destination_count = max(1, destination_candidate_limit)
+    minimum_destination_results = MIN_COMBINED_RESULTS_TARGET
     airport_conn = sqlite3.connect(DB_PATH)
 
     try:
@@ -606,7 +600,9 @@ def build_combined_destination_rankings(
         }
 
         with FlightApiClient(api_key=api_key) as flight_api_client:
-            for ranked_airport in top_destination_candidates:
+            # Start with top N candidates, then continue down the ranked list until
+            # we have enough shared destinations or we run out of airports.
+            for ranked_airport in ranked_destination_airports:
                 destination_iata = ranked_airport.airport.iata_code.upper()
                 considered_destinations.append(destination_iata)
                 logger.info(
@@ -745,6 +741,10 @@ def build_combined_destination_rankings(
                     _round_score(combined_score),
                     len(selected_flights),
                 )
+                # Always inspect at least the first top-N candidates. After that,
+                # stop once we have a healthy number of shared destinations.
+                if len(considered_destinations) >= target_destination_count and len(destination_rows) >= minimum_destination_results:
+                    break
             provider_diagnostics = dict(flight_api_client.diagnostics)
             provider_warnings = list(
                 dict.fromkeys([*provider_warnings, *flight_api_client.warnings])
@@ -775,16 +775,7 @@ def build_combined_destination_rankings(
 
     message: Optional[str] = None
     if ordered_origin_airports and not destination_rows:
-        if provider_warnings:
-            message = (
-                "No ranked destination had flights from every selected origin airport. "
-                f"First provider warning: {provider_warnings[0]}"
-            )
-        else:
-            message = (
-                "No ranked destination had flights from every selected origin airport "
-                "in the live FlightAPI results."
-            )
+        message = "There isn't an airport that has all selected origin airports in common."
     elif provider_warnings:
         message = provider_warnings[0]
 
@@ -913,28 +904,3 @@ def format_flight_rank_results(rank_result: FlightRankResult, limit: Optional[in
         )
 
     return formatted_results
-
-
-# =======================================
-# =========== LOCAL TESTING =============
-# =======================================
-
-if __name__ == "__main__":
-    filters_path = Path("data/filters-test.json")
-    filters_data = load_filters_json(filters_path)
-    parsed_filters = parse_filters_json(filters_data)
-
-    try:
-        raise FlightApiInputError("Local manual test requires a live API key now.")
-    except FlightApiInputError as exc:
-        print(exc)
-        flights = []
-
-    ranked_flights = initialize_ranked_flights(flights)
-    ranked_flights = run_all_flight_ranks(ranked_flights, parsed_filters)
-
-    final_rank = overall_flight_rank(ranked_flights, parsed_filters)
-    print(f"Final overall rank of {len(final_rank.ranked)} flights:")
-    for idx, ranked in enumerate(final_rank.ranked[:25], start=1):  # Print the first 25 ranked airports
-        percent_text = f"{ranked.percent_match:.3f}" if ranked.percent_match is not None else "N/A"
-        print(f"{idx} | {ranked.flight.flight_iata} | {ranked.flight.departure_iata} | {ranked.flight.arrival_iata} | {percent_text}")

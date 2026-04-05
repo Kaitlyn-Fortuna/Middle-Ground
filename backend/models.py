@@ -5,6 +5,27 @@ from typing import Any, Dict, List, Optional
 
 
 # ============================
+# ======== FILTERS ===========
+# ============================
+
+@dataclass(frozen=True)
+class SearchFilters:
+    departure_date: Optional[str] = None
+    return_date: Optional[str] = None
+    airports: Optional[List[str]] = None
+    weather_preferences: Optional[List[str]] = None
+    conditions_preferences: Optional[List[str]] = None
+    geography_preferences: Optional[List[str]] = None
+    max_connections: Optional[int] = None
+    max_flight_time: Optional[int] = None
+    max_flight_cost: Optional[int] = None
+    budget_cap: Optional[int] = None
+    prefer_nonstop: Optional[bool] = None
+    domestic_only: Optional[bool] = None
+    notes: Optional[str] = None
+
+
+# ============================
 # ======== AIRPORTS ==========
 # ============================
 

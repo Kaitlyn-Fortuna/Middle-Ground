@@ -53,7 +53,7 @@ const STORAGE_KEYS = {
 };
 const DEFAULT_OUTPUT_TEXT = "API responses are now logged to the browser console.";
 const DEFAULT_RESULTS_HTML =
-  '<p class="empty-results">Run combined ranking to see ranked airports.</p>';
+  '<p class="empty-results">Choose filters and click Optimize Travel to load results.</p>';
 const DEFAULT_MAX_FLIGHT_TIME = Number(maxFlightTimeEl?.defaultValue || 6);
 const DEFAULT_MAX_FLIGHT_COST = Number(maxFlightCostEl?.defaultValue || 1000);
 
@@ -786,8 +786,23 @@ function renderCombinedResults(data, { persist = true } = {}) {
     ? data.diagnostics.selected_origin_airports
     : [];
   const flightLabel = selectedOrigins.length === 1 ? "Flight" : "Flights";
+  const responseStatus = String(data?.status || "").toLowerCase();
+  const hasExplicitError = responseStatus === "error" || Boolean(data?.error);
+  const resolvedMessage = toDisplayText(data?.message);
+
+  if (hasExplicitError) {
+    const errorMessage = resolvedMessage || toDisplayText(data?.error) || "Unable to optimize travel. Please retry.";
+    resultsListEl.innerHTML = `<p class="empty-results">Error: ${errorMessage}</p>`;
+    if (persist) {
+      persistedCombinedData = null;
+      saveResultsState();
+    }
+    return;
+  }
+
   if (rows.length === 0) {
-    const emptyMessage = toDisplayText(data?.message) || "No results found for this filter set.";
+    const emptyMessage =
+      resolvedMessage || "There isn't an airport that has all selected origin airports in common.";
     logFrontend("No ranked results returned", {
       message: emptyMessage,
       diagnostics: data?.diagnostics || null,

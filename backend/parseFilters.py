@@ -5,43 +5,9 @@ from __future__ import annotations
 # ============================
 
 import json
-from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
-from dataclasses import dataclass
 
-
-# ================================
-# ======== DATA MODELS ===========
-# ================================
-
-@dataclass(frozen=True)
-class SearchFilters:
-
-    departure_date: Optional[str] = None  # user-selected departure date (YYYY-MM-DD)
-    return_date: Optional[str] = None  # user-selected return date (YYYY-MM-DD)
-    airports: Optional[List[str]] = None  # user-selected airport IATA codes
-
-    weather_preferences: Optional[List[str]] = None  # user-selected weather preferences
-    conditions_preferences: Optional[List[str]] = None  # user-selected conditions preferences
-    geography_preferences: Optional[List[str]] = None  # user-selected geography preferences
-
-    max_connections: Optional[int] = None  # user-selected maximum number of connections
-    max_flight_time: Optional[int] = None  # user-selected maximum flight time in hours
-    max_flight_cost: Optional[int] = None  # user-selected maximum cost per flight in USD
-    budget_cap: Optional[int] = None  # user-selected budget cap in USD
-    prefer_nonstop: Optional[bool] = None  # user-selected preference for nonstop flights
-    domestic_only: Optional[bool] = None  # user-selected preference for domestic flights only
-
-    notes: Optional[str] = None  # user-entered notes or comments
-
-
-# ============================
-# ======== HELPERS ===========
-# ============================
-
-def load_filters_json(path: Path) -> Dict[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+from models import SearchFilters
 
 
 def _first_present(data: Dict[str, Any], keys: Iterable[str]) -> Any:
@@ -171,15 +137,3 @@ def parse_filters_api_json(payload: Any) -> SearchFilters:
         return SearchFilters()
 
     return parse_filters_json(payload)
-
-
-# =======================================
-# =========== LOCAL TESTING =============
-# =======================================
-
-if __name__ == "__main__":
-    filters_path = Path("data/filters-sample.json")
-    filters_data = load_filters_json(filters_path)
-    print(filters_data)
-    parsed_filters = parse_filters_json(filters_data)
-    print(parsed_filters)
