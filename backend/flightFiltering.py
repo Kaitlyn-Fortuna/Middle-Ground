@@ -754,11 +754,11 @@ def build_combined_destination_rankings(
 
     destination_rows.sort(
         key=lambda row: (
-            float(row["combined_score"]) if isinstance(row.get("combined_score"), (int, float)) else -1.0,
-            float(row["flight_score"]) if isinstance(row.get("flight_score"), (int, float)) else -1.0,
-            float(row["airport_score"]) if isinstance(row.get("airport_score"), (int, float)) else -1.0,
-        ),
-        reverse=True,
+            -(float(row["combined_score"]) if isinstance(row.get("combined_score"), (int, float)) else -1.0),
+            float(row["combined_price_usd"]) if isinstance(row.get("combined_price_usd"), (int, float)) else float("inf"),
+            -(float(row["flight_score"]) if isinstance(row.get("flight_score"), (int, float)) else -1.0),
+            -(float(row["airport_score"]) if isinstance(row.get("airport_score"), (int, float)) else -1.0),
+        )
     )
     for rank_index, row in enumerate(destination_rows, start=1):
         row["rank"] = rank_index
