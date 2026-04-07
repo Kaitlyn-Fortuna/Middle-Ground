@@ -760,12 +760,76 @@ function renderFlightScoreCard(title, filterValue, actualValue, scoreValue) {
   `;
 }
 
+function renderSkeletonBlock(className = "", width = "", height = "") {
+  const styleVars = [];
+  if (width) styleVars.push(`--skeleton-width:${width}`);
+  if (height) styleVars.push(`--skeleton-height:${height}`);
+  const styleAttr = styleVars.length ? ` style="${styleVars.join(";")}"` : "";
+  return `<span class="skeleton-block ${className}"${styleAttr} aria-hidden="true"></span>`;
+}
+
+function renderResultCardSkeleton(index, originAirportCount) {
+  const routeWidths = ["14rem", "16.5rem", "15.25rem"];
+  const breakdownWidths = ["11.5rem", "13rem", "12.25rem"];
+  const chipWidthGroups = [
+    ["10.25rem", "10.75rem", "7.75rem"],
+    ["11rem", "9.75rem", "8.25rem"],
+    ["9.75rem", "10.5rem", "7.5rem"],
+  ];
+  const flightRouteWidths = ["11.5rem", "10rem", "12.25rem", "9.5rem"];
+  const chipWidths = chipWidthGroups[index % chipWidthGroups.length];
+  const flightRowsHtml = Array.from({ length: originAirportCount }, (_, flightIndex) => {
+    const flightRouteWidth = flightRouteWidths[(index + flightIndex) % flightRouteWidths.length];
+    return `
+      <div class="flight-row flight-row-skeleton tone-na">
+        <div class="flight-summary">
+          <span class="flight-route-wrap">
+            ${renderSkeletonBlock("skeleton-caret", "0.8rem", "0.8rem")}
+            ${renderSkeletonBlock("skeleton-flight-route", flightRouteWidth, "0.95rem")}
+          </span>
+          ${renderSkeletonBlock("skeleton-pill", "4.75rem", "1.55rem")}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <article class="result-card result-card-skeleton" aria-hidden="true">
+      <div class="result-head">
+        ${renderSkeletonBlock("skeleton-route", routeWidths[index % routeWidths.length], "1.35rem")}
+        ${renderSkeletonBlock("skeleton-pill", "7rem", "1.8rem")}
+      </div>
+      <div class="score-breakdown compact skeleton-chip-row">
+        ${chipWidths
+          .map((width) => renderSkeletonBlock("skeleton-pill skeleton-metric-chip", width, "1.75rem"))
+          .join("")}
+      </div>
+      <div class="airport-breakdown airport-breakdown-skeleton">
+        <div class="airport-breakdown-summary">
+          ${renderSkeletonBlock(
+            "skeleton-breakdown-summary",
+            breakdownWidths[index % breakdownWidths.length],
+            "0.95rem"
+          )}
+        </div>
+      </div>
+      <div class="flight-list">
+        ${flightRowsHtml}
+      </div>
+    </article>
+  `;
+}
+
 function renderLoadingState(message = "Optimizing travel...") {
   if (!resultsListEl) return;
+  const originAirportCount = Math.max(selectedAirports.length, 1);
+  const cardCount = Math.min(Math.max(originAirportCount, 3), 5);
   resultsListEl.innerHTML = `
-    <div class="loading-results" role="status" aria-live="polite">
-      <span class="loading-spinner" aria-hidden="true"></span>
-      <span>${message}</span>
+    <div class="results-skeleton" role="status" aria-live="polite">
+      <span class="visually-hidden">${message}</span>
+      ${Array.from({ length: cardCount }, (_, index) =>
+        renderResultCardSkeleton(index, originAirportCount)
+      ).join("")}
     </div>
   `;
 }
