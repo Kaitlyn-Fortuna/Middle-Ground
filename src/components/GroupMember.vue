@@ -12,7 +12,7 @@ import {
   ComboboxItem,
   type AcceptableInputValue,
 } from 'reka-ui'
-import { ref, computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 interface Airport {
   iata_code: string
@@ -31,6 +31,9 @@ const props = withDefaults(
     loadingAirports: false,
   },
 )
+const emit = defineEmits<{
+  advance: []
+}>()
 
 const selectedAirports = computed(() => modelValue.value ?? [])
 
@@ -39,6 +42,7 @@ const selectedAirports = computed(() => modelValue.value ?? [])
 const open = ref(false)
 const searchTerm = ref('')
 const modelValue = defineModel<string[]>('airports', { default: [] })
+const rootEl = ref<HTMLElement | null>(null)
 
 const filteredAirports = computed(() => {
   const search = searchTerm.value.toLowerCase().trim()
@@ -82,7 +86,7 @@ const filteredAirports = computed(() => {
   return results.slice(0, 50).map((result) => result.airport)
 })
 
-function handleSelect(airport: Airport) {
+function handleSelect(airport: Airport, options?: { advance?: boolean }) {
   modelValue.value = [airport.iata_code]
   open.value = false
 
@@ -91,6 +95,10 @@ function handleSelect(airport: Airport) {
   setTimeout(() => {
     searchTerm.value = ''
   }, 0)
+
+  if (options?.advance) {
+    emit('advance')
+  }
 }
 
 function updateModelValue(values: AcceptableInputValue[]) {
@@ -98,11 +106,60 @@ function updateModelValue(values: AcceptableInputValue[]) {
 }
 
 const isLocked = computed(() => selectedAirports.value.length >= 1)
+
+function completeWithTopMatchAndAdvance(event: KeyboardEvent) {
+  const bestMatch = filteredAirports.value[0]
+  if (!bestMatch || !searchTerm.value.trim()) return
+
+  event.preventDefault()
+  handleSelect(bestMatch, { advance: true })
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Backspace' && searchTerm.value === '' && modelValue.value.length > 0) {
+    modelValue.value.pop()
+    return
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault()
+
+    if (!searchTerm.value.trim() && modelValue.value.length === 0) {
+      props.deleteMember()
+      return
+    }
+
+    open.value = false
+    searchTerm.value = ''
+    ;(event.target as HTMLInputElement | null)?.blur()
+    return
+  }
+
+  if (event.key === 'Enter' || event.key === 'Tab' || event.key === ' ') {
+    completeWithTopMatchAndAdvance(event)
+  }
+}
+
+function focusInput() {
+  if (isLocked.value) return
+
+  open.value = true
+  void nextTick(() => {
+    const input = rootEl.value?.querySelector('input')
+    if (!(input instanceof HTMLInputElement)) return
+    input.focus()
+    input.select()
+  })
+}
+
+defineExpose({
+  focusInput,
+})
 </script>
 
 <template>
-  <div class="flex w-full gap-1 items-center">
-    <div class="flex w-full flex-col gap-2">
+  <div ref="rootEl" class="flex w-full gap-1 items-center">
+    <div class="flex w-full flex-col">
       <ComboboxRoot
         v-model="modelValue"
         v-model:open="open"
@@ -116,10 +173,10 @@ const isLocked = computed(() => selectedAirports.value.length >= 1)
             <TagsInput
               :model-value="modelValue"
               @update:model-value="updateModelValue"
-              class="flex w-full flex-wrap gap-2 px-2 py-1"
-              >
+              class="flex min-h-12 w-full flex-wrap gap-2 rounded-xl border border-white/70 bg-white/78 px-2 py-1.5 shadow-sm backdrop-blur-sm"
+            >
               <TagsInputItem v-for="item in modelValue" :key="item" :value="item">
-                <span class="py-0.5 px-2 text-sm rounded bg-transparent font-medium">
+                <span class="rounded bg-transparent px-2 py-0.5 text-sm font-medium">
                   {{
                     (() => {
                       const a = props.airportOptions.find((airport) => airport.iata_code === item)
@@ -131,25 +188,14 @@ const isLocked = computed(() => selectedAirports.value.length >= 1)
               </TagsInputItem>
 
               <ComboboxInput
+                v-if="!isLocked"
                 :value="searchTerm"
                 @input="(e: Event) => (searchTerm = (e.target as HTMLInputElement).value)"
-                :placeholder="
-                  props.loadingAirports
-                    ? 'Loading airports...'
-                    : isLocked
-                      ? 'One airport selected'
-                      : 'Search airport code or city...'
-                "
+                :placeholder="props.loadingAirports ? 'Loading airports...' : 'Search airport code or city...'"
                 class="flex-1 bg-transparent border-none outline-none ring-0 shadow-none min-w-[120px] text-sm min-h-5 px-1"
-                :disabled="props.loadingAirports || isLocked"
-                @keydown.enter.prevent
-                @keydown.backspace="
-                  (e: KeyboardEvent) => {
-                    if (searchTerm === '' && modelValue.length > 0) {
-                      modelValue.pop()
-                    }
-                  }
-                "
+                :disabled="props.loadingAirports"
+                @focus="open = true"
+                @keydown="handleKeydown"
               />
             </TagsInput>
           </div>
@@ -187,9 +233,6 @@ const isLocked = computed(() => selectedAirports.value.length >= 1)
           </ComboboxContent>
         </ComboboxPortal>
       </ComboboxRoot>
-      <p class="px-1 text-xs text-slate-500">
-        One home airport per traveler. Remove the chip to change it.
-      </p>
     </div>
     <Button
       variant="ghost"

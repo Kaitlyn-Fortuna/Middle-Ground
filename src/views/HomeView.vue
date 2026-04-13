@@ -26,7 +26,7 @@ import {
 } from 'lucide-vue-next'
 import { getLocalTimeZone, today } from '@internationalized/date'
 import type { DateRange } from 'reka-ui'
-import { computed, onMounted, onUnmounted, ref, type Ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, type Ref, watch } from 'vue'
 
 interface AirportOption {
   iata_code: string
@@ -111,6 +111,10 @@ interface RankCombinedResponse {
   }
 }
 
+interface GroupMemberHandle {
+  focusInput: () => void
+}
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001/api').replace(/\/$/, '')
 const RESULTS_LIMIT = 10
 
@@ -172,6 +176,7 @@ const loadingMessages = [
 ] as const
 const loadingMessageIndex = ref(0)
 let loadingMessageTimer: ReturnType<typeof setInterval> | null = null
+const groupMemberRefs = ref<Array<GroupMemberHandle | null>>([])
 
 const selectedOriginAirports = computed(() =>
   groupMembers.value.map((member) => member[0]?.trim().toUpperCase()).filter(Boolean) as string[],
@@ -213,6 +218,10 @@ const isSearchReady = computed(
     groupMembers.value.length >= 2 &&
     groupMembers.value.every((member) => Boolean(member[0])) &&
     !isAirportsLoading.value,
+)
+
+const firstEmptyGroupMemberIndex = computed(() =>
+  groupMembers.value.findIndex((member) => !member[0]?.trim()),
 )
 
 const responseOrigins = computed(
@@ -364,6 +373,37 @@ function editSearch() {
   phase.value = 'setup'
 }
 
+function setGroupMemberRef(index: number, instance: GroupMemberHandle | null) {
+  groupMemberRefs.value[index] = instance
+}
+
+function focusGroupMember(index: number) {
+  void nextTick(() => {
+    groupMemberRefs.value[index]?.focusInput()
+  })
+}
+
+function addOrFocusGroupMember() {
+  if (firstEmptyGroupMemberIndex.value !== -1) {
+    focusGroupMember(firstEmptyGroupMemberIndex.value)
+    return
+  }
+
+  groupMembers.value.push([])
+  focusGroupMember(groupMembers.value.length - 1)
+}
+
+function handleGroupMemberAdvance(index: number) {
+  const otherEmptyIndex = groupMembers.value.findIndex((member, memberIndex) => memberIndex !== index && !member[0]?.trim())
+  if (otherEmptyIndex !== -1) {
+    focusGroupMember(otherEmptyIndex)
+    return
+  }
+
+  groupMembers.value.push([])
+  focusGroupMember(groupMembers.value.length - 1)
+}
+
 onMounted(() => {
   void loadAirports()
 })
@@ -413,38 +453,57 @@ onUnmounted(() => {
           </AlertDescription>
         </Alert>
 
-        <div class="grid flex-1 min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <Card class="self-start border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
+        <div class="grid flex-1 min-h-0 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <Card class="flex min-h-0 border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
             <CardHeader>
               <CardTitle>Group Members</CardTitle>
               <CardDescription>Pick the airport each person would realistically depart from.</CardDescription>
             </CardHeader>
-            <CardContent class="space-y-3">
-              <div class="max-h-64 space-y-3 overflow-auto rounded-xl bg-slate-50/80 p-3">
+            <CardContent class="flex min-h-0 flex-1 flex-col gap-3">
+              <div class="min-h-[20rem] flex-1 space-y-3 overflow-auto rounded-xl bg-slate-50/80 p-3">
                 <div v-if="groupMembers.length === 0" class="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
                   No group members added yet.
                 </div>
                 <GroupMember
                   v-for="(member, index) in groupMembers"
                   :key="index"
+                  :ref="(instance) => setGroupMemberRef(index, instance as GroupMemberHandle | null)"
                   v-model:airports="groupMembers[index]"
                   :airport-options="airportOptions"
                   :loading-airports="isAirportsLoading"
                   :delete-member="() => groupMembers.splice(index, 1)"
+                  @advance="handleGroupMemberAdvance(index)"
                 />
               </div>
-              <Button
-                class="cursor-pointer"
-                size="sm"
-                variant="outline"
-                @click="groupMembers.push([])"
-              >
-                <Plus class="mr-1 h-4 w-4" />
-                Add Group Member
-              </Button>
-              <p class="text-xs text-slate-500">
-                Tip: two or more travelers makes the results much more useful.
-              </p>
+              <div class="mt-auto space-y-4 border-t border-slate-200/70 pt-3">
+                <p class="text-xs text-slate-500">
+                  Tip: two or more travelers makes the results much more useful.
+                </p>
+                <div class="flex flex-col gap-2">
+                  <Button
+                    class="cursor-pointer self-start"
+                    size="sm"
+                    variant="outline"
+                    @click="addOrFocusGroupMember"
+                  >
+                    <Plus class="mr-1 h-4 w-4" />
+                    Add Group Member
+                  </Button>
+                </div>
+                <div class="space-y-2 border-t border-slate-200/70 pt-3">
+                  <Button :disabled="!isSearchReady" class="cursor-pointer w-full" @click="search">
+                    <Plane class="mr-2 h-4 w-4" />
+                    Search Shared Destinations
+                  </Button>
+                  <p class="text-sm text-slate-500">
+                    {{
+                      isSearchReady
+                        ? 'Ready to compare the best shared destinations.'
+                        : 'Add at least two travelers and select one airport for each to start.'
+                    }}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -453,11 +512,13 @@ onUnmounted(() => {
               <CardTitle>Preferences</CardTitle>
               <CardDescription>Set the trip window and the kind of destination your group would enjoy most.</CardDescription>
             </CardHeader>
-            <CardContent class="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              <section class="space-y-2 xl:col-span-3">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Dates</h2>
-                <div class="rounded-xl bg-slate-50/80 p-3">
-                  <p class="mb-2 text-xs text-slate-500">Choose the travel window your group can actually make work.</p>
+            <CardContent class="space-y-2.5">
+              <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div class="max-w-sm">
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Dates</h2>
+                    <p class="mt-1 text-sm text-slate-500">Choose the travel window your group can realistically make work.</p>
+                  </div>
                   <Popover>
                     <PopoverTrigger>
                       <Button variant="outline" class="cursor-pointer">
@@ -477,10 +538,12 @@ onUnmounted(() => {
                 </div>
               </section>
 
-              <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Weather</h2>
-                <div class="rounded-xl bg-slate-50/80 p-3">
-                  <h3 class="mb-2 text-sm font-medium text-slate-700">Temperature</h3>
+              <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
+                <div class="space-y-2.5">
+                  <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Temperature</h2>
+                    <p class="mt-1 text-sm text-slate-500">Set the kind of climate the group would enjoy.</p>
+                  </div>
                   <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     <PreferenceButton :icon="Sun" v-model="hotPreference">Hot</PreferenceButton>
                     <PreferenceButton :icon="SunDim" v-model="warmPreference">Warm</PreferenceButton>
@@ -489,8 +552,14 @@ onUnmounted(() => {
                     <PreferenceButton :icon="Snowflake" v-model="coldPreference">Cold</PreferenceButton>
                   </div>
                 </div>
-                <div class="rounded-xl bg-slate-50/80 p-3">
-                  <h3 class="mb-2 text-sm font-medium text-slate-700">Conditions</h3>
+              </section>
+
+              <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
+                <div class="space-y-2.5">
+                  <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Conditions</h2>
+                    <p class="mt-1 text-sm text-slate-500">Choose the overall feel of the weather, from sunny to humid.</p>
+                  </div>
                   <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     <PreferenceButton :icon="Sun" v-model="sunnyPreference">Sunny</PreferenceButton>
                     <PreferenceButton :icon="SunDim" v-model="aridPreference">Arid</PreferenceButton>
@@ -501,10 +570,12 @@ onUnmounted(() => {
                 </div>
               </section>
 
-              <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Geography</h2>
-                <div class="rounded-xl bg-slate-50/80 p-3">
-                  <p class="mb-2 text-xs text-slate-500">Tell the app what kind of place would feel right for the group.</p>
+              <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
+                <div class="space-y-2.5">
+                  <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Geography</h2>
+                    <p class="mt-1 text-sm text-slate-500">Tell the app what kind of place would feel right for the group.</p>
+                  </div>
                   <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <PreferenceButton :icon="TreePalm" v-model="beachPreference">Beach</PreferenceButton>
                     <PreferenceButton :icon="Waves" v-model="coastalPreference">Coastal</PreferenceButton>
@@ -516,40 +587,42 @@ onUnmounted(() => {
                 </div>
               </section>
 
-              <section class="space-y-3">
-                <div>
-                  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Max Flight Cost</h2>
-                  <div class="rounded-xl bg-slate-50/80 px-4 py-3">
-                    <Slider v-model="budget" :max="1000" :min="100" :step="25" />
-                    <p class="mt-2 text-sm text-slate-600">{{ formatMoney(budget[0]) }} per traveler</p>
-                    <p class="mt-1 text-xs text-slate-500">This helps keep pricier flight options from floating to the top.</p>
+              <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
+                <div class="space-y-2.5">
+                  <div>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Trip Limits</h2>
+                    <p class="mt-1 text-sm text-slate-500">Keep the results within a range that still feels realistic for the group.</p>
                   </div>
-                </div>
-                <div>
-                  <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Max Flight Time</h2>
-                  <div class="rounded-xl bg-slate-50/80 px-4 py-3">
-                    <Slider v-model="maxFlightTime" :max="16" :min="2" :step="1" />
-                    <p class="mt-2 text-sm text-slate-600">{{ maxFlightTime[0] }} hours</p>
-                    <p class="mt-1 text-xs text-slate-500">Shorter limits favor destinations that are easier on the whole group.</p>
+                  <div class="grid gap-3 xl:grid-cols-2">
+                    <div class="flex flex-col gap-2.5 rounded-xl bg-white/70 px-3.5 py-2.5 shadow-sm">
+                      <div class="space-y-1.5">
+                        <div>
+                          <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Max Flight Cost</h3>
+                          <p class="mt-1 text-sm text-slate-500">Keep pricier flight options from floating to the top.</p>
+                        </div>
+                        <span class="inline-flex w-fit rounded-full bg-sky-100/90 px-3 py-1 text-sm font-semibold text-sky-950">
+                          {{ formatMoney(budget[0]) }}
+                        </span>
+                      </div>
+                      <Slider v-model="budget" :max="1000" :min="100" :step="25" />
+                    </div>
+                    <div class="flex flex-col gap-2.5 rounded-xl bg-white/70 px-3.5 py-2.5 shadow-sm">
+                      <div class="space-y-1.5">
+                        <div>
+                          <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Max Flight Time</h3>
+                          <p class="mt-1 text-sm text-slate-500">Shorter limits favor destinations that are easier on the whole group.</p>
+                        </div>
+                        <span class="inline-flex w-fit rounded-full bg-sky-100/90 px-3 py-1 text-sm font-semibold text-sky-950">
+                          {{ maxFlightTime[0] }} hr
+                        </span>
+                      </div>
+                      <Slider v-model="maxFlightTime" :max="16" :min="2" :step="1" />
+                    </div>
                   </div>
                 </div>
               </section>
             </CardContent>
           </Card>
-        </div>
-
-        <div class="mt-5 flex flex-col items-center gap-2">
-          <Button :disabled="!isSearchReady" class="cursor-pointer px-6" @click="search">
-            <Plane class="mr-2 h-4 w-4" />
-            Search Shared Destinations
-          </Button>
-          <p class="text-sm text-slate-500">
-            {{
-              isSearchReady
-                ? 'Ready to search the backend.'
-                : 'Add at least two travelers and select one airport for each to start.'
-            }}
-          </p>
         </div>
       </div>
 
@@ -590,43 +663,6 @@ onUnmounted(() => {
           <AlertTitle>{{ searchError ? 'Search failed' : 'Search note' }}</AlertTitle>
           <AlertDescription>{{ summaryMessage }}</AlertDescription>
         </Alert>
-
-        <div v-if="resultRows.length" class="mb-6 space-y-4">
-          <Card class="border-white/70 bg-white/74 shadow-lg backdrop-blur-md">
-            <CardHeader>
-              <CardTitle class="text-base">Backend Summary</CardTitle>
-            </CardHeader>
-            <CardContent class="flex flex-wrap gap-3 text-sm text-slate-700">
-              <span class="rounded-full bg-slate-100/85 px-3 py-1">Live flights loaded: {{ resultDiagnostics?.live_flights_loaded ?? 'N/A' }}</span>
-              <span class="rounded-full bg-slate-100/85 px-3 py-1">
-                Candidate destinations considered: {{ resultDiagnostics?.candidate_destinations_considered?.length ?? 0 }}
-              </span>
-              <span class="rounded-full bg-slate-100/85 px-3 py-1">
-                Airport score keys: {{ activeScoreKeys.airport.join(', ') || 'None' }}
-              </span>
-              <span class="rounded-full bg-slate-100/85 px-3 py-1">
-                Flight score keys: {{ activeScoreKeys.flight.join(', ') || 'None' }}
-              </span>
-            </CardContent>
-          </Card>
-          <Card
-            v-if="resultDiagnostics?.route_errors?.length"
-            class="border-amber-200/70 bg-amber-50/70 shadow-lg backdrop-blur-md"
-          >
-            <CardHeader>
-              <CardTitle class="text-base">Route Warnings</CardTitle>
-              <CardDescription>Some origin/destination lookups returned provider errors.</CardDescription>
-            </CardHeader>
-            <CardContent class="space-y-2 text-sm text-amber-900">
-              <p
-                v-for="(routeError, index) in resultDiagnostics.route_errors"
-                :key="`${routeError.origin_iata}-${routeError.destination_iata}-${index}`"
-              >
-                {{ routeError.origin_iata }} → {{ routeError.destination_iata }}: {{ routeError.error }}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div v-if="resultRows.length" class="space-y-5">
           <Card
@@ -743,6 +779,43 @@ onUnmounted(() => {
                   </div>
                 </div>
               </section>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div v-if="resultRows.length" class="mt-6 space-y-4">
+          <Card
+            v-if="resultDiagnostics?.route_errors?.length"
+            class="border-amber-200/70 bg-amber-50/70 shadow-lg backdrop-blur-md"
+          >
+            <CardHeader>
+              <CardTitle class="text-base">Route Warnings</CardTitle>
+              <CardDescription>Some origin/destination lookups returned provider errors.</CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-2 text-sm text-amber-900">
+              <p
+                v-for="(routeError, index) in resultDiagnostics.route_errors"
+                :key="`${routeError.origin_iata}-${routeError.destination_iata}-${index}`"
+              >
+                {{ routeError.origin_iata }} → {{ routeError.destination_iata }}: {{ routeError.error }}
+              </p>
+            </CardContent>
+          </Card>
+          <Card class="border-white/70 bg-white/74 shadow-lg backdrop-blur-md">
+            <CardHeader>
+              <CardTitle class="text-base">Backend Summary</CardTitle>
+            </CardHeader>
+            <CardContent class="flex flex-wrap gap-3 text-sm text-slate-700">
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">Live flights loaded: {{ resultDiagnostics?.live_flights_loaded ?? 'N/A' }}</span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Candidate destinations considered: {{ resultDiagnostics?.candidate_destinations_considered?.length ?? 0 }}
+              </span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Airport score keys: {{ activeScoreKeys.airport.join(', ') || 'None' }}
+              </span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Flight score keys: {{ activeScoreKeys.flight.join(', ') || 'None' }}
+              </span>
             </CardContent>
           </Card>
         </div>
