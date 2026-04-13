@@ -1,11 +1,15 @@
 {
-    "Weather": ["Hot", "Warm", "Mild", "Cool", "Cold"],
-    "Conditions": ["Sunny", "Dry", "Wet", "Low Humidity", "High Humidity"],
-    "Geography": ["Coastal", "Beach", "Urban", "Mountainous"],
-    "maxConnections": 3,
-    "maxFlightTime": 17,
-    "budgetCap": 3001,
-    "preferNonStop": false,
-    "domesticOnly": true,
-    "notes": "Notes"
+  "departure_date": "2026-04-20",
+  "return_date": "2026-04-27",
+  "airports": ["DTW", "LGA", "ATL"],
+  "weather_preferences": ["warm", "mild"],
+  "conditions_preferences": ["sunny", "dry"],
+  "geography_preferences": ["coastal", "urban"],
+  "max_connections": 1,
+  "max_flight_time": 6,
+  "max_flight_cost": 450,
+  "budget_cap": 450,
+  "prefer_nonstop": true,
+  "domestic_only": true,
+  "notes": "Sample request payload for POST /api/rank-combined."
 }
