@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ref } from 'vue'
+import { RangeCalendar } from '@/components/ui/range-calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ref, type Ref } from 'vue'
 import {
   Plane,
   Plus,
@@ -10,9 +12,7 @@ import {
   Thermometer,
   Wind,
   Snowflake,
-  Droplet,
   DropletOff,
-  CloudSun,
   CloudRain,
   TreePalm,
   Mountain,
@@ -24,8 +24,19 @@ import {
 } from '@lucide/vue'
 import { cactus, palmtreeIslandSun } from '@lucide/lab'
 import GroupMember from '@/components/GroupMember.vue'
+import PreferenceButton from '@/components/PreferenceButton.vue'
+import { h } from 'vue'
+import type { DateRange } from 'reka-ui'
+import { getLocalTimeZone, today } from '@internationalized/date'
 
 const groupMembers = ref<string[][]>([])
+
+const start = today(getLocalTimeZone())
+const end = start.add({ days: 7 })
+const dateRange = ref({
+  start,
+  end,
+}) as Ref<DateRange>
 </script>
 
 <template>
@@ -64,53 +75,56 @@ const groupMembers = ref<string[][]>([])
           <CardTitle class="text-lg">Preferences</CardTitle>
         </CardHeader>
         <CardContent class="flex flex-col gap-2">
+          <h1 class="font-bold">Dates</h1>
+          <div class="px-4 py-2 bg-secondary rounded-md w-1/3">
+            <Popover>
+              <PopoverTrigger>
+                <Button variant="outline">
+                  {{ dateRange?.start?.toDate(getLocalTimeZone()).toLocaleDateString() ?? '?' }} -
+                  {{ dateRange?.end?.toDate(getLocalTimeZone()).toLocaleDateString() ?? '?' }}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-auto p-0">
+                <RangeCalendar
+                  :number-of-months="2"
+                  v-model="dateRange"
+                  disable-days-outside-current-view
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <h1 class="font-bold">Weather</h1>
           <div class="px-4 pt-2 pb-4 bg-secondary rounded-md">
             <h2 class="font-semibold mb-1 text-sm">Temperature</h2>
             <div class="grid grid-cols-5 gap-2">
-              <Button variant="outline"><Sun />Hot</Button>
-              <Button variant="outline"><SunDim />Warm</Button>
-              <Button variant="outline"><Thermometer />Mild</Button>
-              <Button variant="outline"><Wind />Cool</Button>
-              <Button variant="outline"><Snowflake />Cold</Button>
+              <PreferenceButton :icon="Sun">Hot</PreferenceButton>
+              <PreferenceButton :icon="SunDim">Warm</PreferenceButton>
+              <PreferenceButton :icon="Thermometer">Mild</PreferenceButton>
+              <PreferenceButton :icon="Wind">Cool</PreferenceButton>
+              <PreferenceButton :icon="Snowflake">Cold</PreferenceButton>
             </div>
           </div>
           <div class="px-4 pt-2 pb-4 bg-secondary rounded-md">
             <h2 class="font-semibold mb-1 text-sm">Conditions</h2>
             <div class="grid grid-cols-5 gap-2">
-              <Button
-                variant="outline"
-                class="border-sky-500 border-3 bg-sky-100 relative hover:bg-sky-200 cursor-pointer group"
-              >
-                <Sun />Sunny
-                <div
-                  class="absolute -right-1 -top-1 bg-sky-200/90 text-sky-600 rounded-full p-1 group-hover:bg-sky-300/90 group-hover:text-sky-600 transition-all duration-200"
-                >
-                  <Star />
-                </div>
-              </Button>
-              <Button variant="outline"><Icon :iconNode="cactus" />Arid</Button>
-              <Button variant="outline"><CloudRain />Rainy</Button>
-              <Button variant="outline" class="border-amber-500 border-3 bg-amber-100 relative">
-                <DropletOff />Dry
-                <div
-                  class="absolute -right-1 -top-1 bg-amber-200/90 text-amber-600 rounded-full p-1"
-                >
-                  <Star fill="currentColor" />
-                </div>
-              </Button>
-              <Button variant="outline"><Droplets />Humid</Button>
+              <PreferenceButton :icon="Sun">Sunny</PreferenceButton>
+              <PreferenceButton :icon="() => h(Icon, { iconNode: cactus })">Arid</PreferenceButton>
+              <PreferenceButton :icon="CloudRain">Rainy</PreferenceButton>
+              <PreferenceButton :icon="DropletOff">Dry</PreferenceButton>
+              <PreferenceButton :icon="Droplets">Humid</PreferenceButton>
             </div>
           </div>
           <h1 class="font-bold">Geography</h1>
           <div class="px-4 pt-2 pb-4 bg-secondary rounded-md">
             <h2 class="font-semibold mb-1 text-sm">Environment</h2>
             <div class="grid grid-cols-5 gap-2">
-              <Button variant="outline"><TreePalm />Beach</Button>
-              <Button variant="outline"><Waves />Coastal</Button>
-              <Button variant="outline"><Icon :iconNode="palmtreeIslandSun" />Island</Button>
-              <Button variant="outline"><Building2 />Urban</Button>
-              <Button variant="outline"><Mountain />Mountains</Button>
+              <PreferenceButton :icon="TreePalm">Beach</PreferenceButton>
+              <PreferenceButton :icon="Waves">Coastal</PreferenceButton>
+              <PreferenceButton :icon="() => h(Icon, { iconNode: palmtreeIslandSun })"
+                >Island</PreferenceButton
+              >
+              <PreferenceButton :icon="Building2">Urban</PreferenceButton>
+              <PreferenceButton :icon="Mountain">Mountains</PreferenceButton>
             </div>
           </div>
         </CardContent>
