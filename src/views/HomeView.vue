@@ -26,7 +26,7 @@ import {
 } from 'lucide-vue-next'
 import { getLocalTimeZone, today } from '@internationalized/date'
 import type { DateRange } from 'reka-ui'
-import { computed, onMounted, ref, type Ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, type Ref, watch } from 'vue'
 
 interface AirportOption {
   iata_code: string
@@ -152,6 +152,26 @@ const searchMessage = ref<string | null>(null)
 const resultRows = ref<DestinationResultRow[]>([])
 const resultDiagnostics = ref<RankDiagnostics | null>(null)
 const activeScoreKeys = ref<{ airport: string[]; flight: string[] }>({ airport: [], flight: [] })
+const loadingMessages = [
+  {
+    title: 'Optimizing your trip...',
+    detail: 'Balancing destination fit with practical flights for the whole group.',
+  },
+  {
+    title: 'Checking shared destinations...',
+    detail: 'Making sure every traveler can reach the same airport.',
+  },
+  {
+    title: 'Comparing routes and costs...',
+    detail: 'Sorting through the best options for time, price, and date match.',
+  },
+  {
+    title: 'Finding the middle ground...',
+    detail: 'Pulling together the destinations that make the most sense for everyone.',
+  },
+] as const
+const loadingMessageIndex = ref(0)
+let loadingMessageTimer: ReturnType<typeof setInterval> | null = null
 
 const selectedOriginAirports = computed(() =>
   groupMembers.value.map((member) => member[0]?.trim().toUpperCase()).filter(Boolean) as string[],
@@ -206,12 +226,24 @@ const summaryMessage = computed(() => {
   return null
 })
 
+const currentLoadingMessage = computed(
+  () => loadingMessages[loadingMessageIndex.value % loadingMessages.length] ?? loadingMessages[0],
+)
+
 function scoreBadgeClass(score?: number | null): string {
-  if (score == null) return 'bg-muted text-muted-foreground'
-  if (score >= 0.9) return 'bg-emerald-100 text-emerald-800'
-  if (score >= 0.75) return 'bg-sky-100 text-sky-800'
-  if (score >= 0.6) return 'bg-amber-100 text-amber-800'
-  return 'bg-rose-100 text-rose-800'
+  if (score == null) return 'bg-slate-500/10 text-slate-700 ring-1 ring-slate-300/70'
+  if (score >= 0.9) return 'bg-emerald-500/14 text-emerald-950 ring-1 ring-emerald-400/25'
+  if (score >= 0.75) return 'bg-sky-500/14 text-sky-950 ring-1 ring-sky-400/25'
+  if (score >= 0.6) return 'bg-amber-500/16 text-amber-950 ring-1 ring-amber-400/25'
+  return 'bg-rose-500/14 text-rose-950 ring-1 ring-rose-400/25'
+}
+
+function scoreSurfaceClass(score?: number | null): string {
+  if (score == null) return 'border-white/70 bg-white/72'
+  if (score >= 0.9) return 'border-emerald-200/70 bg-emerald-50/45'
+  if (score >= 0.75) return 'border-sky-200/70 bg-sky-50/45'
+  if (score >= 0.6) return 'border-amber-200/70 bg-amber-50/45'
+  return 'border-rose-200/70 bg-rose-50/45'
 }
 
 function formatPercent(score?: number | null): string {
@@ -244,6 +276,14 @@ function formatDuration(hours?: number | null): string {
   if (wholeHours <= 0) return `${minutes} min`
   if (minutes === 0) return `${wholeHours} hr`
   return `${wholeHours} hr ${minutes} min`
+}
+
+function resetLoadingMessages() {
+  loadingMessageIndex.value = 0
+  if (loadingMessageTimer) {
+    clearInterval(loadingMessageTimer)
+    loadingMessageTimer = null
+  }
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -327,20 +367,39 @@ function editSearch() {
 onMounted(() => {
   void loadAirports()
 })
+
+watch(phase, (value) => {
+  if (value === 'searching') {
+    resetLoadingMessages()
+    loadingMessageTimer = setInterval(() => {
+      loadingMessageIndex.value = (loadingMessageIndex.value + 1) % loadingMessages.length
+    }, 5000)
+    return
+  }
+
+  resetLoadingMessages()
+})
+
+onUnmounted(() => {
+  resetLoadingMessages()
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-[linear-gradient(180deg,#f7fbff_0%,#f3f8ef_100%)]">
+  <div class="min-h-screen bg-slate-100">
     <Transition mode="out-in">
-      <div v-if="phase === 'setup'" class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-10">
-        <div class="mb-8">
-          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">Middle Ground</p>
-          <h1 class="mt-2 text-4xl font-semibold tracking-tight text-slate-900">
+      <div
+        v-if="phase === 'setup'"
+        class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 lg:px-6 lg:py-6 xl:h-screen xl:overflow-hidden"
+      >
+        <div class="mb-5">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">Middle Ground</p>
+          <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 lg:text-[2rem]">
             Plan a destination everyone can actually reach.
           </h1>
-          <p class="mt-3 max-w-3xl text-base text-slate-600">
-            The Vue frontend now talks directly to the Flask API for airport search and shared-destination
-            ranking. Pick one home airport per traveler, set the trip window, and search.
+          <p class="mt-2 max-w-3xl text-sm text-slate-600 lg:text-base">
+            Pick one home airport per traveler, choose the kind of trip your group wants, and we'll compare the
+            best shared destinations for everyone.
           </p>
         </div>
 
@@ -354,14 +413,14 @@ onMounted(() => {
           </AlertDescription>
         </Alert>
 
-        <div class="grid gap-6 xl:grid-cols-[1.05fr_1.3fr]">
-          <Card class="border-slate-200/80 bg-white/85 shadow-sm backdrop-blur">
+        <div class="grid flex-1 min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <Card class="self-start border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
             <CardHeader>
               <CardTitle>Group Members</CardTitle>
-              <CardDescription>Each traveler should choose a single origin airport.</CardDescription>
+              <CardDescription>Pick the airport each person would realistically depart from.</CardDescription>
             </CardHeader>
-            <CardContent class="space-y-4">
-              <div class="space-y-3 rounded-xl bg-slate-50/80 p-3">
+            <CardContent class="space-y-3">
+              <div class="max-h-64 space-y-3 overflow-auto rounded-xl bg-slate-50/80 p-3">
                 <div v-if="groupMembers.length === 0" class="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
                   No group members added yet.
                 </div>
@@ -383,21 +442,22 @@ onMounted(() => {
                 <Plus class="mr-1 h-4 w-4" />
                 Add Group Member
               </Button>
-              <p class="text-sm text-slate-500">
-                Search unlocks when at least two travelers each have a home airport selected.
+              <p class="text-xs text-slate-500">
+                Tip: two or more travelers makes the results much more useful.
               </p>
             </CardContent>
           </Card>
 
-          <Card class="border-slate-200/80 bg-white/85 shadow-sm backdrop-blur">
+          <Card class="border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
             <CardHeader>
               <CardTitle>Preferences</CardTitle>
-              <CardDescription>These values are sent directly to <code>/api/rank-combined</code>.</CardDescription>
+              <CardDescription>Set the trip window and the kind of destination your group would enjoy most.</CardDescription>
             </CardHeader>
-            <CardContent class="space-y-6">
-              <section class="space-y-2">
+            <CardContent class="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              <section class="space-y-2 xl:col-span-3">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Dates</h2>
                 <div class="rounded-xl bg-slate-50/80 p-3">
+                  <p class="mb-2 text-xs text-slate-500">Choose the travel window your group can actually make work.</p>
                   <Popover>
                     <PopoverTrigger>
                       <Button variant="outline" class="cursor-pointer">
@@ -444,6 +504,7 @@ onMounted(() => {
               <section class="space-y-3">
                 <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Geography</h2>
                 <div class="rounded-xl bg-slate-50/80 p-3">
+                  <p class="mb-2 text-xs text-slate-500">Tell the app what kind of place would feel right for the group.</p>
                   <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <PreferenceButton :icon="TreePalm" v-model="beachPreference">Beach</PreferenceButton>
                     <PreferenceButton :icon="Waves" v-model="coastalPreference">Coastal</PreferenceButton>
@@ -461,6 +522,7 @@ onMounted(() => {
                   <div class="rounded-xl bg-slate-50/80 px-4 py-3">
                     <Slider v-model="budget" :max="1000" :min="100" :step="25" />
                     <p class="mt-2 text-sm text-slate-600">{{ formatMoney(budget[0]) }} per traveler</p>
+                    <p class="mt-1 text-xs text-slate-500">This helps keep pricier flight options from floating to the top.</p>
                   </div>
                 </div>
                 <div>
@@ -468,6 +530,7 @@ onMounted(() => {
                   <div class="rounded-xl bg-slate-50/80 px-4 py-3">
                     <Slider v-model="maxFlightTime" :max="16" :min="2" :step="1" />
                     <p class="mt-2 text-sm text-slate-600">{{ maxFlightTime[0] }} hours</p>
+                    <p class="mt-1 text-xs text-slate-500">Shorter limits favor destinations that are easier on the whole group.</p>
                   </div>
                 </div>
               </section>
@@ -475,7 +538,7 @@ onMounted(() => {
           </Card>
         </div>
 
-        <div class="mt-8 flex flex-col items-center gap-3">
+        <div class="mt-5 flex flex-col items-center gap-2">
           <Button :disabled="!isSearchReady" class="cursor-pointer px-6" @click="search">
             <Plane class="mr-2 h-4 w-4" />
             Search Shared Destinations
@@ -494,21 +557,21 @@ onMounted(() => {
         v-else-if="phase === 'searching'"
         class="flex min-h-screen flex-col items-center justify-center gap-4 text-slate-700"
       >
-        <LoaderCircle class="h-10 w-10 animate-spin" />
-        <div class="text-center">
-          <h1 class="text-3xl font-semibold">Searching shared destinations...</h1>
-          <p class="mt-2 text-base text-slate-500">The Vue app is waiting on <code>/api/rank-combined</code>.</p>
+        <div class="rounded-3xl border border-white/70 bg-white/70 px-8 py-10 text-center shadow-xl backdrop-blur-md">
+          <LoaderCircle class="mx-auto h-11 w-11 animate-spin text-sky-700" />
+          <h1 class="mt-5 text-3xl font-semibold text-slate-900">{{ currentLoadingMessage.title }}</h1>
+          <p class="mt-3 max-w-md text-base text-slate-600">{{ currentLoadingMessage.detail }}</p>
         </div>
       </div>
 
-      <div v-else class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-10">
-        <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div v-else class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-6 lg:px-6">
+        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-sky-700">Results</p>
-            <h1 class="mt-2 text-4xl font-semibold tracking-tight text-slate-900">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">Results</p>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 lg:text-[2rem]">
               {{ resultRows.length ? `Found ${resultRows.length} shared destinations` : 'No shared destinations found' }}
             </h1>
-            <p class="mt-3 max-w-3xl text-base text-slate-600">
+            <p class="mt-2 max-w-3xl text-sm text-slate-600 lg:text-base">
               Origins:
               <strong>{{ responseOrigins.join(', ') || 'N/A' }}</strong>
               <span class="mx-2 text-slate-300">|</span>
@@ -528,24 +591,27 @@ onMounted(() => {
           <AlertDescription>{{ summaryMessage }}</AlertDescription>
         </Alert>
 
-        <div v-if="resultRows.length" class="mb-6 grid gap-4 lg:grid-cols-3">
-          <Card class="border-slate-200/80 bg-white/90">
+        <div v-if="resultRows.length" class="mb-6 space-y-4">
+          <Card class="border-white/70 bg-white/74 shadow-lg backdrop-blur-md">
             <CardHeader>
               <CardTitle class="text-base">Backend Summary</CardTitle>
             </CardHeader>
-            <CardContent class="space-y-2 text-sm text-slate-600">
-              <p>Live flights loaded: {{ resultDiagnostics?.live_flights_loaded ?? 'N/A' }}</p>
-              <p>
-                Candidate destinations considered:
-                {{ resultDiagnostics?.candidate_destinations_considered?.length ?? 0 }}
-              </p>
-              <p>Airport score keys: {{ activeScoreKeys.airport.join(', ') || 'None' }}</p>
-              <p>Flight score keys: {{ activeScoreKeys.flight.join(', ') || 'None' }}</p>
+            <CardContent class="flex flex-wrap gap-3 text-sm text-slate-700">
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">Live flights loaded: {{ resultDiagnostics?.live_flights_loaded ?? 'N/A' }}</span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Candidate destinations considered: {{ resultDiagnostics?.candidate_destinations_considered?.length ?? 0 }}
+              </span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Airport score keys: {{ activeScoreKeys.airport.join(', ') || 'None' }}
+              </span>
+              <span class="rounded-full bg-slate-100/85 px-3 py-1">
+                Flight score keys: {{ activeScoreKeys.flight.join(', ') || 'None' }}
+              </span>
             </CardContent>
           </Card>
           <Card
             v-if="resultDiagnostics?.route_errors?.length"
-            class="border-amber-200/80 bg-amber-50/80 lg:col-span-2"
+            class="border-amber-200/70 bg-amber-50/70 shadow-lg backdrop-blur-md"
           >
             <CardHeader>
               <CardTitle class="text-base">Route Warnings</CardTitle>
@@ -562,16 +628,17 @@ onMounted(() => {
           </Card>
         </div>
 
-        <div v-if="resultRows.length" class="grid gap-5 xl:grid-cols-2">
+        <div v-if="resultRows.length" class="space-y-5">
           <Card
             v-for="destination in resultRows"
             :key="`${destination.destination_iata}-${destination.rank}`"
-            class="border-slate-200/80 bg-white/90 shadow-sm"
+            class="border-white/70 shadow-xl backdrop-blur-md"
+            :class="scoreSurfaceClass(destination.combined_score)"
           >
             <CardHeader class="gap-3">
               <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p class="text-sm font-semibold uppercase tracking-wide text-sky-700">
+                  <p class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                     Rank #{{ destination.rank ?? 'N/A' }}
                   </p>
                   <CardTitle class="mt-1 text-2xl">
@@ -589,26 +656,26 @@ onMounted(() => {
                 </span>
               </div>
               <div class="flex flex-wrap gap-2 text-sm">
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                <span class="rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm" :class="scoreBadgeClass(destination.airport_score)">
                   Airport #{{ destination.airport_rank ?? 'N/A' }} · {{ formatPercent(destination.airport_score) }}
                 </span>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                <span class="rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm" :class="scoreBadgeClass(destination.flight_score)">
                   Flights #{{ destination.flight_rank ?? 'N/A' }} · {{ formatPercent(destination.flight_score) }}
                 </span>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                <span class="rounded-full bg-slate-900/6 px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm">
                   Group est. {{ formatMoney(destination.combined_price_usd) }}
                 </span>
               </div>
             </CardHeader>
 
-            <CardContent class="space-y-5">
+            <CardContent class="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
               <section v-if="destination.airport_breakdown?.length" class="space-y-3">
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-600">Airport Breakdown</h3>
-                <div class="grid gap-3 md:grid-cols-2">
+                <div class="grid gap-3">
                   <div
                     v-for="metric in destination.airport_breakdown"
                     :key="`${destination.destination_iata}-${metric.key}`"
-                    class="rounded-xl border border-slate-200 bg-slate-50/80 p-3"
+                    class="rounded-xl border border-white/70 bg-white/62 p-3 shadow-sm backdrop-blur-sm"
                   >
                     <div class="flex items-start justify-between gap-3">
                       <div>
@@ -617,7 +684,7 @@ onMounted(() => {
                         <p class="text-sm text-slate-500">Actual: {{ metric.actual || 'N/A' }}</p>
                       </div>
                       <span
-                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
                         :class="scoreBadgeClass(metric.score)"
                       >
                         {{ formatPercent(metric.score) }}
@@ -633,7 +700,8 @@ onMounted(() => {
                   <div
                     v-for="flight in destination.flights || []"
                     :key="`${destination.destination_iata}-${flight.departure_iata}-${flight.flight_iata}`"
-                    class="rounded-xl border border-slate-200 bg-white p-4"
+                    class="rounded-2xl border p-4 shadow-sm backdrop-blur-sm"
+                    :class="scoreSurfaceClass(flight.percent_match)"
                   >
                     <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
@@ -647,10 +715,21 @@ onMounted(() => {
                         </p>
                       </div>
                       <span
-                        class="inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold"
+                        class="inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold backdrop-blur-sm"
                         :class="scoreBadgeClass(flight.percent_match)"
                       >
                         {{ formatPercent(flight.percent_match) }}
+                      </span>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
+                      <span class="rounded-full px-2.5 py-1" :class="scoreBadgeClass(flight.scores?.flight_time)">
+                        Time {{ formatPercent(flight.scores?.flight_time) }}
+                      </span>
+                      <span class="rounded-full px-2.5 py-1" :class="scoreBadgeClass(flight.scores?.flight_cost)">
+                        Cost {{ formatPercent(flight.scores?.flight_cost) }}
+                      </span>
+                      <span class="rounded-full px-2.5 py-1" :class="scoreBadgeClass(flight.scores?.departure_date)">
+                        Date {{ formatPercent(flight.scores?.departure_date) }}
                       </span>
                     </div>
                     <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">

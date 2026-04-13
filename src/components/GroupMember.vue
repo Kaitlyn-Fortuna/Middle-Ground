@@ -96,11 +96,13 @@ function handleSelect(airport: Airport) {
 function updateModelValue(values: AcceptableInputValue[]) {
   modelValue.value = values.map((value) => String(value)).slice(-1)
 }
+
+const isLocked = computed(() => selectedAirports.value.length >= 1)
 </script>
 
 <template>
   <div class="flex w-full gap-1 items-center">
-    <div class="flex w-full max-w-sm flex-col gap-4">
+    <div class="flex w-full flex-col gap-2">
       <ComboboxRoot
         v-model="modelValue"
         v-model:open="open"
@@ -115,13 +117,13 @@ function updateModelValue(values: AcceptableInputValue[]) {
               :model-value="modelValue"
               @update:model-value="updateModelValue"
               class="flex w-full flex-wrap gap-2 px-2 py-1"
-            >
+              >
               <TagsInputItem v-for="item in modelValue" :key="item" :value="item">
-                <span class="py-0.5 px-2 text-sm rounded bg-transparent">
+                <span class="py-0.5 px-2 text-sm rounded bg-transparent font-medium">
                   {{
                     (() => {
                       const a = props.airportOptions.find((airport) => airport.iata_code === item)
-                      return a ? `${a.iata_code}` : item
+                      return a ? `${a.iata_code} - ${a.municipality}` : item
                     })()
                   }}
                 </span>
@@ -131,9 +133,15 @@ function updateModelValue(values: AcceptableInputValue[]) {
               <ComboboxInput
                 :value="searchTerm"
                 @input="(e: Event) => (searchTerm = (e.target as HTMLInputElement).value)"
-                :placeholder="props.loadingAirports ? 'Loading airports...' : 'Search airport code or city...'"
+                :placeholder="
+                  props.loadingAirports
+                    ? 'Loading airports...'
+                    : isLocked
+                      ? 'One airport selected'
+                      : 'Search airport code or city...'
+                "
                 class="flex-1 bg-transparent border-none outline-none ring-0 shadow-none min-w-[120px] text-sm min-h-5 px-1"
-                :disabled="props.loadingAirports"
+                :disabled="props.loadingAirports || isLocked"
                 @keydown.enter.prevent
                 @keydown.backspace="
                   (e: KeyboardEvent) => {
@@ -179,6 +187,9 @@ function updateModelValue(values: AcceptableInputValue[]) {
           </ComboboxContent>
         </ComboboxPortal>
       </ComboboxRoot>
+      <p class="px-1 text-xs text-slate-500">
+        One home airport per traveler. Remove the chip to change it.
+      </p>
     </div>
     <Button
       variant="ghost"
