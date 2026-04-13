@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { Field } from '@/components/ui/field'
-import {
-  TagsInput,
-  TagsInputItem,
-  TagsInputItemDelete,
-} from '@/components/ui/tags-input'
+import { TagsInput, TagsInputItem, TagsInputItemDelete } from '@/components/ui/tags-input'
 import { Button } from '@/components/ui/button'
 import { Trash } from 'lucide-vue-next'
 import {
@@ -29,7 +25,6 @@ interface Airport {
 
 const airportOptions = airportOptionsRaw as Airport[]
 
-const airports = defineModel<string[]>('airports')
 defineProps<{
   deleteMember: () => void
 }>()
@@ -38,20 +33,20 @@ defineProps<{
 // Limit to 50 results so the massive airport json doesn't lag the DOM
 const open = ref(false)
 const searchTerm = ref('')
-const modelValue = ref<string[]>([])
+const modelValue = defineModel<string[]>('airports')
 
 const filteredAirports = computed(() => {
   const search = searchTerm.value.toLowerCase().trim()
   if (!search) {
     return airportOptions
-      .filter((airport) => !modelValue.value.includes(airport.iata_code))
+      .filter((airport) => modelValue.value!.includes(airport.iata_code))
       .slice(0, 50)
   }
 
   const results: { airport: Airport; score: number }[] = []
 
   for (const airport of airportOptions) {
-    if (modelValue.value.includes(airport.iata_code)) continue
+    if (modelValue.value!.includes(airport.iata_code)) continue
 
     const code = airport.iata_code.toLowerCase()
     const name = airport.name.toLowerCase()
@@ -81,7 +76,7 @@ const filteredAirports = computed(() => {
 })
 
 function handleSelect(airport: Airport) {
-  modelValue.value.push(airport.iata_code)
+  modelValue.value!.push(airport.iata_code)
   open.value = false
 
   // Delay clearing the search term slightly so the dropdown doesn't
