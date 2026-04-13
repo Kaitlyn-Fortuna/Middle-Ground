@@ -25,11 +25,9 @@ MiddleGround helps groups traveling from different origin airports find the best
   - `data/airport_data.db`
   - `data/flight_api_cache.db`
 
-Legacy static frontend files (`main.html`, `main.js`, `main.css`) are still in the repo, but the active UI is the Vue app.
-
 ## Environment
 
-Create a root `.env` file. A starter file is included as `.env.example`.
+Create a root `.env` file:
 
 ```env
 FLIGHTAPI_API_KEY=replace-with-your-flightapi-key
