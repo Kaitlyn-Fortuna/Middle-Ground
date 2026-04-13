@@ -35,9 +35,6 @@ Simple health check.
 ### `GET /api/airports`
 Returns domestic large airports for the picker UI.
 
-### `POST /api/rank`
-Airport-only ranking endpoint.
-
 ### `POST /api/rank-combined`
 Primary optimize endpoint used by the UI.
 
