@@ -1,69 +1,20 @@
-# middle-ground
-
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-
 # MiddleGround
 
-MiddleGround helps groups traveling from different origin airports find the best shared destination.
+MiddleGround helps groups traveling from different origin airports find the best shared destination. The current frontend is a Vue 3 + Vite app in `src/`, and the backend is a Flask API in `backend/`.
 
 ## What it does
 
-1. Ranks destination airports using local airport/weather/geography data.
-2. Starts with the top 10 ranked destination candidates and requests real route data from FlightAPI for each selected origin airport.
-3. If fewer than 5 valid shared destinations are found, continues scanning further down the ranked list until it finds at least 5 or reaches the end.
-4. Keeps only destinations where every selected origin has at least one route.
-5. Scores the best route per origin by time/cost/date alignment.
-6. Combines airport score + flight score into one ranked destination list.
-7. Renders ranked cards in the UI with airport and flight breakdowns.
+1. Loads origin airport options from the backend.
+2. Accepts group origin airports, trip dates, and preference filters in the Vue UI.
+3. Ranks destination airports using local airport/weather/geography data.
+4. Fetches route data from FlightAPI for each selected origin airport.
+5. Keeps only destinations that every selected origin can reach.
+6. Scores the best route per origin by time, estimated cost, and departure-date alignment.
+7. Returns combined destination results with airport breakdowns and per-origin flight summaries.
 
-## Current architecture
+## Architecture
 
-- Frontend: `main.html`, `main.js`, `main.css`
+- Frontend: `src/` (`Vue 3`, `Vite`, `TypeScript`)
 - Backend API: `backend/app.py`
 - Airport ranking: `backend/airportFiltering.py`
 - Flight API + cache: `backend/flightApiProvider.py`
@@ -74,82 +25,134 @@ MiddleGround helps groups traveling from different origin airports find the best
   - `data/airport_data.db`
   - `data/flight_api_cache.db`
 
-All app models are centralized in `backend/models.py`.
+Legacy static frontend files (`main.html`, `main.js`, `main.css`) are still in the repo, but the active UI is the Vue app.
+
+## Environment
+
+Create a root `.env` file. A starter file is included as `.env.example`.
+
+```env
+FLIGHTAPI_API_KEY=replace-with-your-flightapi-key
+VITE_API_BASE_URL=http://127.0.0.1:5001/api
+```
+
+Notes:
+
+- `FLIGHTAPI_API_KEY` is read by the Flask backend when the frontend does not send an `X-API-Key` header.
+- The Vue frontend no longer has an API-key field in the UI.
+- `VITE_API_BASE_URL` tells the Vue app where the Flask API is running.
+- The local `.env` file is gitignored.
 
 ## API behavior
 
 ### `GET /api/health`
+
 Simple health check.
 
 ### `GET /api/airports`
-Returns domestic large airports for the picker UI.
+
+Returns the domestic large-airport list used by the Vue airport picker.
 
 ### `POST /api/rank-combined`
-Primary optimize endpoint used by the UI.
 
-Required request header:
+Primary optimize endpoint used by the Vue UI.
 
-```http
-X-API-Key: <your-flightapi-key>
+Inputs:
+
+- Query param: `limit`
+- JSON body:
+  - `departure_date`
+  - `return_date`
+  - `airports`
+  - optional airport preference filters
+  - `max_flight_time`
+  - `max_flight_cost`
+- API key:
+  - preferred source: `FLIGHTAPI_API_KEY` in `.env`
+  - optional override: `X-API-Key` request header
+
+Sample request payload:
+
+```json
+{
+  "departure_date": "2026-04-20",
+  "return_date": "2026-04-27",
+  "airports": ["DTW", "LGA", "ATL"],
+  "weather_preferences": ["warm", "mild"],
+  "conditions_preferences": ["sunny", "dry"],
+  "geography_preferences": ["coastal", "urban"],
+  "max_flight_time": 6,
+  "max_flight_cost": 450
+}
 ```
 
-Expected body fields:
-- `departure_date`
-- `return_date`
-- `airports` (origins)
-- optional airport preference filters
-- `max_flight_time`
-- `max_flight_cost`
+Sample files:
+
+- Request body example: `data/filters-sample.json`
+- Response example: `data/rank-combined-response-sample.json`
 
 ## Caching
 
-FlightAPI responses are cached in SQLite (`data/flight_api_cache.db`) for route/detail/code lookups.
+FlightAPI responses are cached in SQLite (`data/flight_api_cache.db`) for route, flight-detail, and airline-code lookups.
 
 Notes:
+
 - Route data is always live-or-cache.
-- Flight detail enrichment is optional and disabled by default to avoid noisy `/airline` failures:
-  - `ENABLE_FLIGHT_DETAIL_ENRICHMENT=1` to enable
-  - default is off
+- Flight detail enrichment is optional and disabled by default to avoid noisy `/airline` failures.
+- `ENABLE_FLIGHT_DETAIL_ENRICHMENT=1` enables detail enrichment.
 
 ## Diagnostics
 
-`/api/rank-combined` includes diagnostics to help debug live behavior:
+`/api/rank-combined` includes diagnostics to help debug live behavior, including:
+
 - `candidate_destination_limit`
 - `initial_top_ranked_airport_candidates`
 - `candidate_destinations_considered`
 - `excluded_destinations_missing_origins`
-- `route_errors` (route call failures by origin/destination)
-- `provider` (cache/request counters and enrichment mode)
+- `route_errors`
+- `provider`
 
-## Destination search strategy
+## Local development
 
-- Candidate scan starts with the top 10 ranked airports.
-- The backend continues past top 10 if needed to find at least 5 shared destinations.
-- If fewer than 5 exist in total, it returns whatever it found.
-- If none exist, response message is:
-  - `There isn't an airport that has all selected origin airports in common.`
-
-## UI behavior updates
-
-- Empty state now says: “Choose filters and click Optimize Travel to load results.”
-- If optimize returns no shared destinations, UI shows the same explicit “no common airport” message.
-- If the API returns an error status, UI shows `Error: ... Please retry.`
-- Flight durations are displayed in readable text (`1 hour 30 minutes`).
-
-## Local run
-
-1. Install backend deps:
+1. Install backend dependencies:
 
 ```bash
-python -m pip install -r backend/requirements.txt
+python3 -m pip install -r backend/requirements.txt
 ```
 
-2. Start backend:
+2. Start the backend:
 
 ```bash
-python backend/app.py
+python3 backend/app.py
 ```
 
-3. Serve frontend (`main.html`) with a local static server (Live Server is fine).
+3. Install frontend dependencies:
 
-Backend URL: `http://127.0.0.1:5001`
+```bash
+npm install
+```
+
+4. Start the Vue frontend:
+
+```bash
+npm run dev
+```
+
+Default local URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://127.0.0.1:5001`
+
+## Vue frontend flow
+
+The Vue app does two backend calls:
+
+1. `GET /api/airports` to populate each group member's airport picker.
+2. `POST /api/rank-combined?limit=10` to fetch ranked shared destinations.
+
+The returned result cards display:
+
+- destination rank and combined score
+- airport score and airport breakdown
+- estimated total group flight price
+- best flight per selected origin airport

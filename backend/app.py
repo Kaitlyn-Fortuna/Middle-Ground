@@ -1,7 +1,9 @@
 from pathlib import Path
 import logging
+import os
 import sqlite3
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -24,6 +26,9 @@ from flightApiProvider import FlightApiError, FlightApiInputError
 app = Flask(__name__)
 BACKEND_DIR = Path(__file__).resolve().parent
 DATA_DIR = BACKEND_DIR.parent / "data"
+ROOT_DIR = BACKEND_DIR.parent
+
+load_dotenv(ROOT_DIR / ".env")
 
 if not logging.getLogger().handlers:
     logging.basicConfig(
@@ -90,6 +95,14 @@ def _mask_api_key(value: str) -> str:
     return f"{cleaned[:3]}***{cleaned[-3:]}"
 
 
+def _configured_flight_api_key() -> str:
+    for env_name in ("FLIGHTAPI_API_KEY", "FLIGHT_API_KEY"):
+        value = (os.getenv(env_name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
 @app.get("/api/health")
 def health_check():
     return jsonify({"status": "ok", "message": "Flask server is running"})
@@ -112,9 +125,17 @@ def list_airports():
 
 @app.post("/api/rank-combined")
 def rank_combined():
-    api_key = (request.headers.get("X-API-Key") or "").strip()
+    api_key = (request.headers.get("X-API-Key") or _configured_flight_api_key()).strip()
     if not api_key:
-        return jsonify({"status": "error", "message": "Missing API key. Submit your API key from the website first."}), 400
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Missing API key. Set FLIGHTAPI_API_KEY in .env or send X-API-Key.",
+                }
+            ),
+            400,
+        )
 
     payload = request.get_json(silent=True)
     filters = parse_filters_api_json(payload)
