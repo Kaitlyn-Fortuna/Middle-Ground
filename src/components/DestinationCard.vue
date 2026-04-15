@@ -1,6 +1,26 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Building2,
+  CloudRain,
+  DropletOff,
+  Droplets,
+  Mountain,
+  Sun,
+  Thermometer,
+  TreePalm,
+  Waves,
+  Trophy,
+  Plane,
+  Calendar,
+  Clock,
+  Layers,
+  Droplet,
+  CloudSun,
+  CloudSunRain,
+  CircleDollarSign,
+} from '@lucide/vue'
+import {
   scoreBadgeClass,
   scoreSurfaceClass,
   formatPercent,
@@ -13,6 +33,21 @@ import type { DestinationResultRow } from '@/types'
 defineProps<{
   destination: DestinationResultRow
 }>()
+
+const iconMap: Record<string, any> = {
+  temperature: Thermometer,
+  sunny: Sun,
+  dry: CloudSun,
+  wet: CloudRain,
+  'dry/wet': CloudSunRain,
+  'low humidity': DropletOff,
+  'high humidity': Droplets,
+  'low/high humidity': Droplet,
+  beach: TreePalm,
+  coastal: Waves,
+  urban: Building2,
+  mountainous: Mountain,
+}
 </script>
 
 <template>
@@ -42,22 +77,25 @@ defineProps<{
       </div>
       <div class="flex flex-wrap gap-2 text-sm">
         <span
-          class="rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
           :class="scoreBadgeClass(destination.airport_score)"
         >
+          <Building2 class="h-3.5 w-3.5" />
           Airport #{{ destination.airport_rank ?? 'N/A' }} ·
           {{ formatPercent(destination.airport_score) }}
         </span>
         <span
-          class="rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
           :class="scoreBadgeClass(destination.flight_score)"
         >
+          <Plane class="h-3.5 w-3.5" />
           Flights #{{ destination.flight_rank ?? 'N/A' }} ·
           {{ formatPercent(destination.flight_score) }}
         </span>
         <span
-          class="rounded-full bg-slate-900/6 px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
+          class="inline-flex items-center gap-1.5 rounded-full bg-slate-900/6 px-3 py-1 text-slate-800 ring-1 ring-black/5 backdrop-blur-sm"
         >
+          <CircleDollarSign class="h-3.5 w-3.5" />
           Group est. {{ formatMoney(destination.combined_price_usd) }}
         </span>
       </div>
@@ -75,10 +113,18 @@ defineProps<{
             class="rounded-xl border border-white/70 bg-white/62 p-3 shadow-sm backdrop-blur-sm"
           >
             <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="font-medium text-slate-900">{{ metric.label || metric.key }}</p>
-                <p class="mt-1 text-sm text-slate-500">Target: {{ metric.target || 'N/A' }}</p>
-                <p class="text-sm text-slate-500">Actual: {{ metric.actual || 'N/A' }}</p>
+              <div class="flex gap-3">
+                <div
+                  v-if="metric.key && iconMap[metric.key]"
+                  class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600"
+                >
+                  <component :is="iconMap[metric.key]" class="h-4 w-4" />
+                </div>
+                <div>
+                  <p class="font-medium text-slate-900">{{ metric.label || metric.key }}</p>
+                  <p class="mt-1 text-sm text-slate-500">Target: {{ metric.target || 'N/A' }}</p>
+                  <p class="text-sm text-slate-500">Actual: {{ metric.actual || 'N/A' }}</p>
+                </div>
               </div>
               <span
                 class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
@@ -140,13 +186,31 @@ defineProps<{
                 Date {{ formatPercent(flight.scores?.departure_date) }}
               </span>
             </div>
-            <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
-              <p>Depart: {{ formatDateTime(flight.departure_scheduled) }}</p>
-              <p>Arrive: {{ formatDateTime(flight.arrival_scheduled) }}</p>
-              <p>Duration: {{ formatDuration(flight.duration_hours) }}</p>
-              <p>Est. Cost: {{ formatMoney(flight.estimated_cost_usd) }}</p>
-              <p>Options Considered: {{ flight.option_count ?? 'N/A' }}</p>
-              <p>Flight Rank: {{ flight.flight_rank ?? 'N/A' }}</p>
+            <div class="mt-3 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="flex items-center gap-2">
+                <Calendar class="h-4 w-4 text-slate-400" />
+                <span>Depart: {{ formatDateTime(flight.departure_scheduled) }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Calendar class="h-4 w-4 text-slate-400" />
+                <span>Arrive: {{ formatDateTime(flight.arrival_scheduled) }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Clock class="h-4 w-4 text-slate-400" />
+                <span>Duration: {{ formatDuration(flight.duration_hours) }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <CircleDollarSign class="h-4 w-4 text-slate-400" />
+                <span>Est. Cost: {{ formatMoney(flight.estimated_cost_usd) }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Layers class="h-4 w-4 text-slate-400" />
+                <span>Options: {{ flight.option_count ?? 'N/A' }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Trophy class="h-4 w-4 text-slate-400" />
+                <span>Flight Rank: {{ flight.flight_rank ?? 'N/A' }}</span>
+              </div>
             </div>
           </div>
         </div>

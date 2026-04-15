@@ -13,10 +13,23 @@ defineProps<{
       class="rounded-3xl border border-white/70 bg-white/70 px-8 py-10 text-center shadow-xl backdrop-blur-md"
     >
       <LoaderCircle class="mx-auto h-11 w-11 animate-spin text-sky-700" />
-      <h1 class="mt-5 text-3xl font-semibold text-slate-900">
-        {{ title }}
-      </h1>
-      <p class="mt-3 max-w-md text-base text-slate-600">{{ detail }}</p>
+      <Transition mode="out-in">
+        <h1 class="mt-5 text-3xl font-semibold text-slate-900" :key="title">
+          {{ title }}
+        </h1>
+      </Transition>
     </div>
   </div>
 </template>
+
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease-out;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+</style>

@@ -114,10 +114,12 @@ function handleGroupMemberAdvance(index: number) {
       <Card class="flex min-h-0 border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
         <CardHeader>
           <CardTitle>Group Members</CardTitle>
-          <CardDescription>Pick the airport each person would realistically depart from.</CardDescription>
+          <CardDescription
+            >Pick the airport each person would realistically depart from.</CardDescription
+          >
         </CardHeader>
         <CardContent class="flex min-h-0 flex-1 flex-col gap-3">
-          <div class="min-h-[20rem] flex-1 space-y-3 overflow-auto rounded-xl bg-slate-50/80 p-3">
+          <div class="min-h-80 flex-1 space-y-3 overflow-auto rounded-xl bg-slate-50/80 p-3">
             <div
               v-if="groupMembers.length === 0"
               class="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500"
@@ -151,7 +153,11 @@ function handleGroupMemberAdvance(index: number) {
               </Button>
             </div>
             <div class="space-y-2 border-t border-slate-200/70 pt-3">
-              <Button :disabled="!isSearchReady" class="cursor-pointer w-full" @click="$emit('search')">
+              <Button
+                :disabled="!isSearchReady"
+                class="cursor-pointer w-full"
+                @click="$emit('search')"
+              >
                 <Plane class="mr-2 h-4 w-4" />
                 Search Shared Destinations
               </Button>
@@ -170,7 +176,10 @@ function handleGroupMemberAdvance(index: number) {
       <Card class="border-white/70 bg-white/72 shadow-lg backdrop-blur-md">
         <CardHeader>
           <CardTitle>Preferences</CardTitle>
-          <CardDescription>Set the trip window and the kind of destination your group would enjoy most.</CardDescription>
+          <CardDescription
+            >Set the trip window and the kind of destination your group would enjoy
+            most.</CardDescription
+          >
         </CardHeader>
         <CardContent class="space-y-2.5">
           <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
@@ -203,15 +212,23 @@ function handleGroupMemberAdvance(index: number) {
           <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
             <div class="space-y-2.5">
               <div>
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Temperature</h2>
-                <p class="mt-1 text-sm text-slate-500">Set the kind of climate the group would enjoy.</p>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                  Temperature
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Set the kind of climate the group would enjoy.
+                </p>
               </div>
               <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
                 <PreferenceButton :icon="Sun" v-model="preferences.hot">Hot</PreferenceButton>
                 <PreferenceButton :icon="SunDim" v-model="preferences.warm">Warm</PreferenceButton>
-                <PreferenceButton :icon="Thermometer" v-model="preferences.mild">Mild</PreferenceButton>
+                <PreferenceButton :icon="Thermometer" v-model="preferences.mild"
+                  >Mild</PreferenceButton
+                >
                 <PreferenceButton :icon="Wind" v-model="preferences.cool">Cool</PreferenceButton>
-                <PreferenceButton :icon="Snowflake" v-model="preferences.cold">Cold</PreferenceButton>
+                <PreferenceButton :icon="Snowflake" v-model="preferences.cold"
+                  >Cold</PreferenceButton
+                >
               </div>
             </div>
           </section>
@@ -219,7 +236,9 @@ function handleGroupMemberAdvance(index: number) {
           <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
             <div class="space-y-2.5">
               <div>
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Conditions</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                  Conditions
+                </h2>
                 <p class="mt-1 text-sm text-slate-500">
                   Choose the overall feel of the weather, from sunny to humid.
                 </p>
@@ -227,9 +246,15 @@ function handleGroupMemberAdvance(index: number) {
               <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
                 <PreferenceButton :icon="Sun" v-model="preferences.sunny">Sunny</PreferenceButton>
                 <PreferenceButton :icon="SunDim" v-model="preferences.arid">Arid</PreferenceButton>
-                <PreferenceButton :icon="CloudRain" v-model="preferences.rainy">Rainy</PreferenceButton>
-                <PreferenceButton :icon="DropletOff" v-model="preferences.dry">Dry</PreferenceButton>
-                <PreferenceButton :icon="Droplets" v-model="preferences.humid">Humid</PreferenceButton>
+                <PreferenceButton :icon="CloudRain" v-model="preferences.rainy"
+                  >Rainy</PreferenceButton
+                >
+                <PreferenceButton :icon="DropletOff" v-model="preferences.dry"
+                  >Dry</PreferenceButton
+                >
+                <PreferenceButton :icon="Droplets" v-model="preferences.humid"
+                  >Humid</PreferenceButton
+                >
               </div>
             </div>
           </section>
@@ -237,15 +262,23 @@ function handleGroupMemberAdvance(index: number) {
           <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
             <div class="space-y-2.5">
               <div>
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Geography</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                  Geography
+                </h2>
                 <p class="mt-1 text-sm text-slate-500">
                   Tell the app what kind of place would feel right for the group.
                 </p>
               </div>
               <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <PreferenceButton :icon="TreePalm" v-model="preferences.beach">Beach</PreferenceButton>
-                <PreferenceButton :icon="Waves" v-model="preferences.coastal">Coastal</PreferenceButton>
-                <PreferenceButton :icon="Building2" v-model="preferences.urban">Urban</PreferenceButton>
+                <PreferenceButton :icon="TreePalm" v-model="preferences.beach"
+                  >Beach</PreferenceButton
+                >
+                <PreferenceButton :icon="Waves" v-model="preferences.coastal"
+                  >Coastal</PreferenceButton
+                >
+                <PreferenceButton :icon="Building2" v-model="preferences.urban"
+                  >Urban</PreferenceButton
+                >
                 <PreferenceButton :icon="Mountain" v-model="preferences.mountain">
                   Mountains
                 </PreferenceButton>
@@ -256,7 +289,9 @@ function handleGroupMemberAdvance(index: number) {
           <section class="rounded-2xl bg-slate-50/80 px-3.5 py-2.5">
             <div class="space-y-2.5">
               <div>
-                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">Trip Limits</h2>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                  Trip Limits
+                </h2>
                 <p class="mt-1 text-sm text-slate-500">
                   Keep the results within a range that still feels realistic for the group.
                 </p>
