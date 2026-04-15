@@ -44,3 +44,6 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 .env
+
+data/*.db
+backend/__pycache__
