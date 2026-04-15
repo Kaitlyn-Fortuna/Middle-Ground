@@ -28,6 +28,7 @@ import type { DateRange } from 'reka-ui'
 import { computed, nextTick, ref } from 'vue'
 import type { AirportOption, GroupMemberHandle } from '@/types'
 import { formatMoney } from '@/lib/formatters'
+import middleGroundLogo from '../../MiddleGroundLogo.png'
 
 const props = defineProps<{
   airportOptions: AirportOption[]
@@ -89,15 +90,26 @@ function handleGroupMemberAdvance(index: number) {
 
 <template>
   <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 lg:px-6 lg:py-6">
-    <div class="mb-5">
-      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">Middle Ground</p>
-      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 lg:text-[2rem]">
-        Plan a destination everyone can actually reach.
-      </h1>
-      <p class="mt-2 max-w-3xl text-sm text-slate-600 lg:text-base">
-        Pick one home airport per traveler, choose the kind of trip your group wants, and we'll
-        compare the best shared destinations for everyone.
-      </p>
+    <div class="mb-5 flex items-stretch justify-between gap-4">
+      <div class="min-w-0 max-w-3xl flex-1">
+        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">
+          Middle Ground
+        </p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 lg:text-[2rem]">
+          Plan a destination everyone can actually reach.
+        </h1>
+        <p class="mt-2 text-sm text-slate-600 lg:text-base">
+          Pick one home airport per traveler, choose the kind of trip your group wants, and we'll
+          compare the best shared destinations for everyone.
+        </p>
+      </div>
+      <div class="flex shrink-0 self-stretch">
+        <img
+          :src="middleGroundLogo"
+          alt="Middle Ground logo"
+          class="h-full w-auto max-w-[34vw] object-contain object-right sm:max-w-[180px] lg:max-w-[220px]"
+        />
+      </div>
     </div>
 
     <Alert v-if="airportLoadError" variant="destructive" class="mb-6">
