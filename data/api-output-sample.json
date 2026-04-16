@@ -1,0 +1,961 @@
+{
+  "active_score_keys": {
+    "airport": [
+      "beach",
+      "coastal",
+      "dry",
+      "sunny",
+      "temperature",
+      "urban"
+    ],
+    "flight": [
+      "departure_date",
+      "flight_cost",
+      "flight_time"
+    ]
+  },
+  "count": 5,
+  "diagnostics": {
+    "airport_ranking_mode": "filtered",
+    "candidate_destination_limit": 10,
+    "candidate_destinations_considered": [
+      "HNL",
+      "OGG",
+      "SAN",
+      "SFO",
+      "OAK",
+      "SNA",
+      "SJC",
+      "SRQ",
+      "FLL",
+      "PHL",
+      "TPA",
+      "JFK"
+    ],
+    "excluded_destinations_missing_origins": [
+      {
+        "destination_iata": "HNL",
+        "missing_origins": [
+          "CLE"
+        ]
+      },
+      {
+        "destination_iata": "OGG",
+        "missing_origins": [
+          "CLE"
+        ]
+      },
+      {
+        "destination_iata": "SAN",
+        "missing_origins": [
+          "CLE"
+        ]
+      },
+      {
+        "destination_iata": "OAK",
+        "missing_origins": [
+          "CLE"
+        ]
+      },
+      {
+        "destination_iata": "SNA",
+        "missing_origins": [
+          "LAX"
+        ]
+      },
+      {
+        "destination_iata": "SJC",
+        "missing_origins": [
+          "CLE"
+        ]
+      },
+      {
+        "destination_iata": "SRQ",
+        "missing_origins": [
+          "CLE"
+        ]
+      }
+    ],
+    "flight_data_source": "flightapi",
+    "flight_filter_context": {
+      "departure_date": "2026-04-08",
+      "max_flight_cost": 500,
+      "max_flight_time": 6,
+      "return_date": "2026-04-16"
+    },
+    "flight_price_note": "The connected FlightAPI tracking endpoints do not include ticket fares, so cost-based ranking still uses the local estimator.",
+    "flight_price_source": "estimated",
+    "initial_top_ranked_airport_candidates": [
+      "HNL",
+      "OGG",
+      "SAN",
+      "SFO",
+      "OAK",
+      "SNA",
+      "SJC",
+      "SRQ",
+      "FLL",
+      "PHL"
+    ],
+    "live_flights_loaded": 503,
+    "ordered_origin_airports": [
+      "CLE",
+      "DTW",
+      "LAX"
+    ],
+    "provider": {
+      "airline_code_cache_hits": 0,
+      "airline_code_requests": 0,
+      "airline_code_stale_hits": 0,
+      "cache_db_path": "/Users/kyle/Library/CloudStorage/OneDrive-UniversityofToledo/Spring 2026/EECS3550/MiddleGround/data/flight_api_cache.db",
+      "detail_cache_hits": 0,
+      "detail_lookups_attempted": 0,
+      "detail_lookups_failed": 0,
+      "detail_lookups_succeeded": 0,
+      "detail_no_data": 0,
+      "detail_requests": 0,
+      "detail_stale_hits": 0,
+      "flight_detail_enrichment_enabled": false,
+      "provider": "flightapi",
+      "route_cache_hits": 16,
+      "route_no_data": 0,
+      "route_pairs_requested": [
+        {
+          "departure_date": "2026-04-08",
+          "destination": "HNL",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "OGG",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SAN",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SFO",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SFO",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SFO",
+          "origin": "LAX"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "OAK",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SNA",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SNA",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SNA",
+          "origin": "LAX"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SJC",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "SRQ",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "FLL",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "FLL",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "FLL",
+          "origin": "LAX"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "PHL",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "PHL",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "PHL",
+          "origin": "LAX"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "TPA",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "TPA",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "TPA",
+          "origin": "LAX"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "JFK",
+          "origin": "CLE"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "JFK",
+          "origin": "DTW"
+        },
+        {
+          "departure_date": "2026-04-08",
+          "destination": "JFK",
+          "origin": "LAX"
+        }
+      ],
+      "route_requests": 8,
+      "route_stale_hits": 6
+    },
+    "provider_warnings": [],
+    "return_date": "2026-04-16",
+    "route_errors": [],
+    "selected_origin_airports": [
+      "CLE",
+      "DTW",
+      "LAX"
+    ],
+    "skipped_origin_destinations": []
+  },
+  "message": null,
+  "results": [
+    {
+      "airport_breakdown": [
+        {
+          "actual": "13.7ºC",
+          "key": "temperature",
+          "label": "Temperature",
+          "score": 0.737,
+          "target": "22.0ºC to 40.0ºC (Hot/Warm)"
+        },
+        {
+          "actual": "9.7h/day",
+          "key": "sunny",
+          "label": "Sun Hours",
+          "score": 1,
+          "target": "≥ 9.5h/day"
+        },
+        {
+          "actual": "1.8mm/day",
+          "key": "dry",
+          "label": "Precipitation",
+          "score": 0.731,
+          "target": "≤ 1.0mm/day (Dry)"
+        },
+        {
+          "actual": "1.5 mi",
+          "key": "coastal",
+          "label": "Coastal",
+          "score": 1,
+          "target": "≤ 25 mi to coast"
+        },
+        {
+          "actual": "1.5 mi",
+          "key": "beach",
+          "label": "Beach",
+          "score": 1,
+          "target": "≤ 2 mi to beach"
+        },
+        {
+          "actual": "945,942 people",
+          "key": "urban",
+          "label": "Urban",
+          "score": 0.892,
+          "target": "≥ 5,000,000 people"
+        }
+      ],
+      "airport_rank": 4,
+      "airport_score": 0.893,
+      "airport_scores": {
+        "beach": 1,
+        "coastal": 1,
+        "dry": 0.7305792597676607,
+        "sunny": 1,
+        "temperature": 0.737320767940212,
+        "urban": 0.8920572694627674
+      },
+      "combined_price_usd": 925,
+      "combined_score": 0.947,
+      "destination_iata": "SFO",
+      "destination_name": "San Francisco International Airport",
+      "flight_rank": 1,
+      "flight_score": 1,
+      "flights": [
+        {
+          "airline_iata": "NZ",
+          "airline_name": "United Airlines",
+          "arrival_iata": "SFO",
+          "arrival_scheduled": "2026-04-08T08:46:00",
+          "departure_iata": "CLE",
+          "departure_scheduled": "2026-04-08T06:38:00",
+          "duration_hours": 2.13,
+          "estimated_cost_usd": 340,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "NZ2153",
+          "flight_number": "2153",
+          "flight_rank": 1,
+          "flight_status": "Arrived",
+          "option_count": 4,
+          "origin_slot": 1,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "SFO",
+          "arrival_scheduled": "2026-04-08T19:22:00",
+          "departure_iata": "DTW",
+          "departure_scheduled": "2026-04-08T17:28:00",
+          "duration_hours": 1.9,
+          "estimated_cost_usd": 350,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL442",
+          "flight_number": "442",
+          "flight_rank": 2,
+          "flight_status": "Arrived",
+          "option_count": 12,
+          "origin_slot": 2,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "SFO",
+          "arrival_scheduled": "2026-04-08T07:34:00",
+          "departure_iata": "LAX",
+          "departure_scheduled": "2026-04-08T06:39:00",
+          "duration_hours": 0.92,
+          "estimated_cost_usd": 235,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL1421",
+          "flight_number": "1421",
+          "flight_rank": 3,
+          "flight_status": "Arrived",
+          "option_count": 136,
+          "origin_slot": 3,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        }
+      ],
+      "rank": 1
+    },
+    {
+      "airport_breakdown": [
+        {
+          "actual": "13.5ºC",
+          "key": "temperature",
+          "label": "Temperature",
+          "score": 0.735,
+          "target": "22.0ºC to 40.0ºC (Hot/Warm)"
+        },
+        {
+          "actual": "8.4h/day",
+          "key": "sunny",
+          "label": "Sun Hours",
+          "score": 0.88,
+          "target": "≥ 9.5h/day"
+        },
+        {
+          "actual": "3.2mm/day",
+          "key": "dry",
+          "label": "Precipitation",
+          "score": 0.266,
+          "target": "≤ 1.0mm/day (Dry)"
+        },
+        {
+          "actual": "2.0 mi",
+          "key": "coastal",
+          "label": "Coastal",
+          "score": 1,
+          "target": "≤ 25 mi to coast"
+        },
+        {
+          "actual": "2.0 mi",
+          "key": "beach",
+          "label": "Beach",
+          "score": 1,
+          "target": "≤ 2 mi to beach"
+        },
+        {
+          "actual": "1,526,006 people",
+          "key": "urban",
+          "label": "Urban",
+          "score": 0.923,
+          "target": "≥ 5,000,000 people"
+        }
+      ],
+      "airport_rank": 10,
+      "airport_score": 0.801,
+      "airport_scores": {
+        "beach": 1,
+        "coastal": 1,
+        "dry": 0.26577240143369174,
+        "sunny": 0.8798442609862629,
+        "temperature": 0.7354430839624799,
+        "urban": 0.9230607752553562
+      },
+      "combined_price_usd": 1565,
+      "combined_score": 0.841,
+      "destination_iata": "PHL",
+      "destination_name": "Philadelphia International Airport",
+      "flight_rank": 2,
+      "flight_score": 0.881,
+      "flights": [
+        {
+          "airline_iata": "AA",
+          "airline_name": "American Airlines",
+          "arrival_iata": "PHL",
+          "arrival_scheduled": "2026-04-08T12:04:00",
+          "departure_iata": "CLE",
+          "departure_scheduled": "2026-04-08T11:03:00",
+          "duration_hours": 1.02,
+          "estimated_cost_usd": 480,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "AA5171",
+          "flight_number": "5171",
+          "flight_rank": 1,
+          "flight_status": "Arrived",
+          "option_count": 8,
+          "origin_slot": 1,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "PHL",
+          "arrival_scheduled": "2026-04-08T16:22:00",
+          "departure_iata": "DTW",
+          "departure_scheduled": "2026-04-08T15:10:00",
+          "duration_hours": 1.2,
+          "estimated_cost_usd": 265,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL1391",
+          "flight_number": "1391",
+          "flight_rank": 2,
+          "flight_status": "Arrived",
+          "option_count": 25,
+          "origin_slot": 2,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "QF",
+          "airline_name": "American Airlines",
+          "arrival_iata": "PHL",
+          "arrival_scheduled": "2026-04-09T05:27:00",
+          "departure_iata": "LAX",
+          "departure_scheduled": "2026-04-08T21:46:00",
+          "duration_hours": 7.68,
+          "estimated_cost_usd": 820,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "QF1384",
+          "flight_number": "1384",
+          "flight_rank": 3,
+          "flight_status": "Arrived",
+          "option_count": 24,
+          "origin_slot": 3,
+          "percent_match": 0.643,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.385,
+            "flight_time": 0.543
+          }
+        }
+      ],
+      "rank": 2
+    },
+    {
+      "airport_breakdown": [
+        {
+          "actual": "24.4ºC",
+          "key": "temperature",
+          "label": "Temperature",
+          "score": 1,
+          "target": "22.0ºC to 40.0ºC (Hot/Warm)"
+        },
+        {
+          "actual": "9.9h/day",
+          "key": "sunny",
+          "label": "Sun Hours",
+          "score": 1,
+          "target": "≥ 9.5h/day"
+        },
+        {
+          "actual": "4.9mm/day",
+          "key": "dry",
+          "label": "Precipitation",
+          "score": 0,
+          "target": "≤ 1.0mm/day (Dry)"
+        },
+        {
+          "actual": "2.0 mi",
+          "key": "coastal",
+          "label": "Coastal",
+          "score": 1,
+          "target": "≤ 25 mi to coast"
+        },
+        {
+          "actual": "2.0 mi",
+          "key": "beach",
+          "label": "Beach",
+          "score": 1,
+          "target": "≤ 2 mi to beach"
+        },
+        {
+          "actual": "399,457 people",
+          "key": "urban",
+          "label": "Urban",
+          "score": 0.836,
+          "target": "≥ 5,000,000 people"
+        }
+      ],
+      "airport_rank": 9,
+      "airport_score": 0.806,
+      "airport_scores": {
+        "beach": 1,
+        "coastal": 1,
+        "dry": 0,
+        "sunny": 1,
+        "temperature": 1,
+        "urban": 0.8361690001600772
+      },
+      "combined_price_usd": 1685,
+      "combined_score": 0.837,
+      "destination_iata": "FLL",
+      "destination_name": "Fort Lauderdale Hollywood International Airport",
+      "flight_rank": 3,
+      "flight_score": 0.868,
+      "flights": [
+        {
+          "airline_iata": "NK",
+          "airline_name": "Spirit Airlines",
+          "arrival_iata": "FLL",
+          "arrival_scheduled": "2026-04-08T21:31:00",
+          "departure_iata": "CLE",
+          "departure_scheduled": "2026-04-08T18:34:00",
+          "duration_hours": 2.95,
+          "estimated_cost_usd": 550,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "NK3113",
+          "flight_number": "3113",
+          "flight_rank": 1,
+          "flight_status": "Arrived",
+          "option_count": 6,
+          "origin_slot": 1,
+          "percent_match": 0.933,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.8,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "FLL",
+          "arrival_scheduled": "2026-04-08T12:46:00",
+          "departure_iata": "DTW",
+          "departure_scheduled": "2026-04-08T10:09:00",
+          "duration_hours": 2.62,
+          "estimated_cost_usd": 365,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL1378",
+          "flight_number": "1378",
+          "flight_rank": 2,
+          "flight_status": "Arrived",
+          "option_count": 23,
+          "origin_slot": 2,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "FLL",
+          "arrival_scheduled": "2026-04-09T07:41:00",
+          "departure_iata": "LAX",
+          "departure_scheduled": "2026-04-09T00:17:00",
+          "duration_hours": 7.4,
+          "estimated_cost_usd": 770,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL477",
+          "flight_number": "477",
+          "flight_rank": 3,
+          "flight_status": "Arrived",
+          "option_count": 18,
+          "origin_slot": 3,
+          "percent_match": 0.671,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.426,
+            "flight_time": 0.588
+          }
+        }
+      ],
+      "rank": 3
+    },
+    {
+      "airport_breakdown": [
+        {
+          "actual": "12.5ºC",
+          "key": "temperature",
+          "label": "Temperature",
+          "score": 0.725,
+          "target": "22.0ºC to 40.0ºC (Hot/Warm)"
+        },
+        {
+          "actual": "8.5h/day",
+          "key": "sunny",
+          "label": "Sun Hours",
+          "score": 0.898,
+          "target": "≥ 9.5h/day"
+        },
+        {
+          "actual": "3.5mm/day",
+          "key": "dry",
+          "label": "Precipitation",
+          "score": 0.167,
+          "target": "≤ 1.0mm/day (Dry)"
+        },
+        {
+          "actual": "1.0 mi",
+          "key": "coastal",
+          "label": "Coastal",
+          "score": 1,
+          "target": "≤ 25 mi to coast"
+        },
+        {
+          "actual": "1.0 mi",
+          "key": "beach",
+          "label": "Beach",
+          "score": 1,
+          "target": "≤ 2 mi to beach"
+        },
+        {
+          "actual": "8,175,133 people",
+          "key": "urban",
+          "label": "Urban",
+          "score": 1,
+          "target": "≥ 5,000,000 people"
+        }
+      ],
+      "airport_rank": 12,
+      "airport_score": 0.798,
+      "airport_scores": {
+        "beach": 1,
+        "coastal": 1,
+        "dry": 0.16688751620529216,
+        "sunny": 0.8982456487297994,
+        "temperature": 0.7250626012354152,
+        "urban": 1
+      },
+      "combined_price_usd": 1610,
+      "combined_score": 0.833,
+      "destination_iata": "JFK",
+      "destination_name": "John F Kennedy International Airport",
+      "flight_rank": 4,
+      "flight_score": 0.867,
+      "flights": [
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "JFK",
+          "arrival_scheduled": "2026-04-08T08:44:00",
+          "departure_iata": "CLE",
+          "departure_scheduled": "2026-04-08T07:30:00",
+          "duration_hours": 1.23,
+          "estimated_cost_usd": 365,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL5008",
+          "flight_number": "5008",
+          "flight_rank": 1,
+          "flight_status": "Arrived",
+          "option_count": 30,
+          "origin_slot": 1,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "LO",
+          "airline_name": "JetBlue Airways",
+          "arrival_iata": "JFK",
+          "arrival_scheduled": "2026-04-08T07:33:00",
+          "departure_iata": "DTW",
+          "departure_scheduled": "2026-04-08T06:12:00",
+          "duration_hours": 1.35,
+          "estimated_cost_usd": 240,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "LO720",
+          "flight_number": "720",
+          "flight_rank": 2,
+          "flight_status": "Arrived",
+          "option_count": 32,
+          "origin_slot": 2,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "QF",
+          "airline_name": "American Airlines",
+          "arrival_iata": "JFK",
+          "arrival_scheduled": "2026-04-09T06:33:00",
+          "departure_iata": "LAX",
+          "departure_scheduled": "2026-04-08T22:43:00",
+          "duration_hours": 7.83,
+          "estimated_cost_usd": 1005,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "QF28",
+          "flight_number": "28",
+          "flight_rank": 3,
+          "flight_status": "Arrived",
+          "option_count": 148,
+          "origin_slot": 3,
+          "percent_match": 0.602,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.284,
+            "flight_time": 0.522
+          }
+        }
+      ],
+      "rank": 4
+    },
+    {
+      "airport_breakdown": [
+        {
+          "actual": "22.9ºC",
+          "key": "temperature",
+          "label": "Temperature",
+          "score": 1,
+          "target": "22.0ºC to 40.0ºC (Hot/Warm)"
+        },
+        {
+          "actual": "9.8h/day",
+          "key": "sunny",
+          "label": "Sun Hours",
+          "score": 1,
+          "target": "≥ 9.5h/day"
+        },
+        {
+          "actual": "3.7mm/day",
+          "key": "dry",
+          "label": "Precipitation",
+          "score": 0.107,
+          "target": "≤ 1.0mm/day (Dry)"
+        },
+        {
+          "actual": "5.1 mi",
+          "key": "coastal",
+          "label": "Coastal",
+          "score": 1,
+          "target": "≤ 25 mi to coast"
+        },
+        {
+          "actual": "5.1 mi",
+          "key": "beach",
+          "label": "Beach",
+          "score": 0.865,
+          "target": "≤ 2 mi to beach"
+        },
+        {
+          "actual": "335,709 people",
+          "key": "urban",
+          "label": "Urban",
+          "score": 0.825,
+          "target": "≥ 5,000,000 people"
+        }
+      ],
+      "airport_rank": 11,
+      "airport_score": 0.799,
+      "airport_scores": {
+        "beach": 0.8651745751548361,
+        "coastal": 1,
+        "dry": 0.10685012328732298,
+        "sunny": 1,
+        "temperature": 1,
+        "urban": 0.8248975891533709
+      },
+      "combined_price_usd": 1690,
+      "combined_score": 0.833,
+      "destination_iata": "TPA",
+      "destination_name": "Tampa International Airport",
+      "flight_rank": 5,
+      "flight_score": 0.866,
+      "flights": [
+        {
+          "airline_iata": "F9",
+          "airline_name": "Frontier Airlines",
+          "arrival_iata": "TPA",
+          "arrival_scheduled": "2026-04-08T15:56:00",
+          "departure_iata": "CLE",
+          "departure_scheduled": "2026-04-08T13:41:00",
+          "duration_hours": 2.25,
+          "estimated_cost_usd": 570,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "F92919",
+          "flight_number": "2919",
+          "flight_rank": 1,
+          "flight_status": "Arrived",
+          "option_count": 3,
+          "origin_slot": 1,
+          "percent_match": 0.914,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.741,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "TPA",
+          "arrival_scheduled": "2026-04-08T09:29:00",
+          "departure_iata": "DTW",
+          "departure_scheduled": "2026-04-08T07:13:00",
+          "duration_hours": 2.27,
+          "estimated_cost_usd": 350,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL2852",
+          "flight_number": "2852",
+          "flight_rank": 2,
+          "flight_status": "Arrived",
+          "option_count": 21,
+          "origin_slot": 2,
+          "percent_match": 1,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 1,
+            "flight_time": 1
+          }
+        },
+        {
+          "airline_iata": "DL",
+          "airline_name": "Delta Air Lines",
+          "arrival_iata": "TPA",
+          "arrival_scheduled": "2026-04-08T18:52:00",
+          "departure_iata": "LAX",
+          "departure_scheduled": "2026-04-08T11:40:00",
+          "duration_hours": 7.2,
+          "estimated_cost_usd": 770,
+          "flight_callsign": null,
+          "flight_date": "2026-04-08",
+          "flight_iata": "DL749",
+          "flight_number": "749",
+          "flight_rank": 3,
+          "flight_status": "Arrived",
+          "option_count": 11,
+          "origin_slot": 3,
+          "percent_match": 0.684,
+          "rank": 1,
+          "scores": {
+            "departure_date": 1,
+            "flight_cost": 0.426,
+            "flight_time": 0.625
+          }
+        }
+      ],
+      "rank": 5
+    }
+  ],
+  "status": "ok"
+}
